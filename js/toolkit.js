@@ -135,3 +135,12 @@ wireUploads();
 document.querySelectorAll(".foottab").forEach(function(a){a.addEventListener("click",function(){
   const t=document.querySelector('.tab[data-t="'+a.dataset.t+'"]'); if(t){t.click();window.scrollTo({top:0,behavior:"smooth"});}
 });});
+
+// deep-link přes hash (#ner, #morf, #korek, #prek) — příchod z přehledu i z patičky
+function tabFromHash(){
+  const h=(location.hash||"").replace("#","");
+  const t=h&&document.querySelector('.tab[data-t="'+h+'"]:not(.dis)');
+  if(t){t.click();const el=document.getElementById("tabs");if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}
+}
+window.addEventListener("hashchange",tabFromHash);
+tabFromHash();

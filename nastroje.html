@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nástroje — NER, morfologie, korektor a překlad češtiny online | Czech NLP Toolkit</title>
+<meta name="description" content="Spusťte české NLP nástroje přímo v prohlížeči: rozpoznávání entit (NER), morfologická analýza, oprava pravopisu a diakritiky a strojový překlad. Postaveno na ÚFAL MFF UK.">
+<meta name="author" content="Michal Bürgermeister">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#06070c">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="favicon.svg">
+<link rel="manifest" href="site.webmanifest">
+<link rel="canonical" href="https://buggy1111.github.io/czech-nlp-toolkit/nastroje.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Czech NLP Toolkit">
+<meta property="og:locale" content="cs_CZ">
+<meta property="og:title" content="Nástroje — Czech NLP Toolkit">
+<meta property="og:description" content="NER, morfologie, korektor a překlad češtiny přímo v prohlížeči. Postaveno na ÚFAL MFF UK.">
+<meta property="og:url" content="https://buggy1111.github.io/czech-nlp-toolkit/nastroje.html">
+<meta property="og:image" content="https://buggy1111.github.io/czech-nlp-toolkit/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://buggy1111.github.io/czech-nlp-toolkit/og-image.png">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/toolkit.css">
+</head>
+<body>
+<noscript><div style="background:#7c5cff;color:#fff;text-align:center;padding:11px;font-family:sans-serif;font-size:14px">Tento nástroj potřebuje zapnutý JavaScript.</div></noscript>
+<div class="wrap">
+  <header>
+    <a class="logo" href="index.html"><span class="dot"></span> Czech NLP <small>Toolkit</small></a>
+    <a class="gh" href="index.html">← Zpět na přehled</a>
+  </header>
+  <section class="hero">
+    <div class="pill">🎓 Powered by <b style="color:var(--gold);margin:0 4px">ÚFAL MFF UK</b> · běží přímo v prohlížeči</div>
+    <h1>Nástroje</h1>
+    <p>Vyberte záložku, vložte text nebo nahrajte soubor a spusťte zpracování. Pro anonymizaci osobních údajů máme <a href="anonymize.html" style="color:var(--acc2)">samostatný anonymizér</a>.</p>
+  </section>
+
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-t="anon">🔒 Anonymizace</div>
+    <div class="tab" data-t="ner">🧠 Entity (NER)</div>
+    <div class="tab" data-t="morf">📊 Morfologie</div>
+    <div class="tab" data-t="korek">✍️ Pravopis</div>
+    <div class="tab" data-t="prek">🌍 Překlad</div>
+    <div class="tab dis" title="PONK API nepovoluje volání z prohlížeče (CORS) — dostupné v plném nástroji">📖 Čitelnost</div>
+  </div>
+
+  <!-- ANONYMIZACE -->
+  <div class="panel active" data-p="anon">
+    <div class="desc"><b>Anonymizace osobních údajů</b> — skryje v textu jména, rodná čísla, adresy, telefony, IČO, e-maily a další citlivé údaje a nahradí je placeholdery (OSOBA1, MESTO1…). <b>K čemu:</b> než text pošlete do AI, zveřejníte nebo sdílíte — GDPR a citlivá data. <span class="eng">⚙️ regex (offline) + reálný NER od ÚFAL (MasKIT/NameTag)</span></div>
+    <div class="card"><div class="ch"><span>Anonymizace PII</span></div>
+      <div style="padding:28px 24px;text-align:center">
+        <p style="color:var(--mut);margin-bottom:20px;max-width:520px;margin-left:auto;margin-right:auto">Plný anonymizér má vlastní stránku — <b style="color:var(--txt)">2 módy</b> (lokální regex zcela offline / reálný NER), <b style="color:var(--txt)">19 typů PII</b>, živé zvýraznění a tabulku náhrad.</p>
+        <a class="btn" href="anonymize.html" style="display:inline-block">Otevřít anonymizér →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- NER -->
+  <div class="panel" data-p="ner">
+    <div class="desc"><b>Rozpoznávání entit (NER)</b> — najde v textu jména osob, firmy, místa, instituce a data, a roztřídí je do kategorií. <b>K čemu:</b> extrakce dat z dokumentů, indexace, příprava textu pro další analýzu. <span class="eng">⚙️ NameTag 3 od ÚFAL · 35 jazyků</span></div>
+    <div class="controls"><button class="btn" id="ner-go">Rozpoznat entity</button><label class="upload">📎 Soubor<input type="file" accept=".txt,.pdf,.docx" data-target="ner-in" data-status="ner-st" hidden></label><span class="status" id="ner-st"></span></div>
+    <div class="panes">
+      <div class="card"><div class="ch"><span>Vstupní text</span><span class="cc" id="ner-cc"></span></div>
+        <textarea id="ner-in" data-cc="ner-cc">Pavel Novák z firmy Seznam.cz se sešel s Marií Svobodovou v Brně 3. února 2026.</textarea></div>
+      <div class="out" id="ner-out"></div>
+    </div>
+  </div>
+
+  <!-- MORFOLOGIE -->
+  <div class="panel" data-p="morf">
+    <div class="desc"><b>Morfologická analýza</b> — u každého slova určí základní tvar (lemma), slovní druh a mluvnické kategorie (pád, rod, číslo, čas…). <b>K čemu:</b> jazyková analýza, chytré vyhledávání, výuka češtiny, lingvistika. <span class="eng">⚙️ UDPipe 2 od ÚFAL</span></div>
+    <div class="controls"><button class="btn" id="morf-go">Analyzovat</button><label class="upload">📎 Soubor<input type="file" accept=".txt,.pdf,.docx" data-target="morf-in" data-status="morf-st" hidden></label><span class="status" id="morf-st"></span></div>
+    <div class="panes">
+      <div class="card"><div class="ch"><span>Vstupní text</span><span class="cc" id="morf-cc"></span></div>
+        <textarea id="morf-in" data-cc="morf-cc">Pavel viděl tři velké psy a rychle utíkal domů.</textarea></div>
+      <div class="out mono" id="morf-out"></div>
+    </div>
+  </div>
+
+  <!-- KOREKTOR -->
+  <div class="panel" data-p="korek">
+    <div class="desc"><b>Korektor pravopisu</b> — opraví překlepy a doplní chybějící diakritiku (háčky a čárky). <b>K čemu:</b> úprava textů psaných bez diakritiky (SMS, chat) nebo s překlepy. Opravená slova jsou <span class="ins">zvýrazněná</span>. <span class="eng">⚙️ Korektor od ÚFAL</span></div>
+    <div class="controls"><button class="btn" id="korek-go">Opravit</button><label class="upload">📎 Soubor<input type="file" accept=".txt,.pdf,.docx" data-target="korek-in" data-status="korek-st" hidden></label><span class="status" id="korek-st"></span></div>
+    <div class="panes">
+      <div class="card"><div class="ch"><span>Text s překlepy / bez diakritiky</span><span class="cc" id="korek-cc"></span></div>
+        <textarea id="korek-in" data-cc="korek-cc">Muj kolega napsal zpravu bez diakritiky a s nekolika preklepy.</textarea></div>
+      <div class="out" id="korek-out"></div>
+    </div>
+  </div>
+
+  <!-- PREKLAD -->
+  <div class="panel" data-p="prek">
+    <div class="desc"><b>Strojový překlad</b> — přeloží text mezi 7 jazyky. <b>K čemu:</b> běžný i odborný text. <span class="eng">⚙️ CUBBITT od ÚFAL — patří ke špičce v CS↔EN, kvalitou srovnatelný s profesionálním překladem</span></div>
+    <div class="controls">
+      <select id="prek-src"></select><span style="color:var(--mut)">→</span><select id="prek-tgt"></select>
+      <button class="btn" id="prek-go">Přeložit</button><label class="upload">📎 Soubor<input type="file" accept=".txt,.pdf,.docx" data-target="prek-in" data-status="prek-st" hidden></label><span class="status" id="prek-st"></span></div>
+    <div class="panes">
+      <div class="card"><div class="ch"><span>Text k překladu</span><span class="cc" id="prek-cc"></span></div>
+        <textarea id="prek-in" data-cc="prek-cc">Dobrý den, rád bych si objednal dva lístky na zítřejší představení.</textarea></div>
+      <div class="out" id="prek-out"></div>
+    </div>
+  </div>
+
+  <div class="trust">
+    <span>🔒 <b>Bez vlastního serveru</b> — texty jdou přímo z prohlížeče na ÚFAL, nic neukládáme</span>
+    <span>🎓 Akademické API <b>ÚFAL MFF UK</b> (LINDAT)</span>
+    <span>📏 Max <b>20 000 znaků</b> na požadavek</span>
+    <span>⚖️ <b>Nekomerční</b> použití</span>
+  </div>
+
+  <section class="faq">
+    <h2>Časté otázky</h2>
+    <details>
+      <summary>Co je Czech NLP Toolkit?</summary>
+      <p>Bezplatná webová sada českých NLP nástrojů v jednom místě: anonymizace osobních údajů, rozpoznávání entit (NER), morfologická analýza, oprava pravopisu a strojový překlad. Vše běží přímo v prohlížeči a využívá akademické API ÚFAL MFF UK.</p>
+    </details>
+    <details>
+      <summary>Je Czech NLP Toolkit zdarma?</summary>
+      <p>Ano, je zdarma pro nekomerční použití. Staví na otevřených nástrojích od ÚFAL MFF UK — NameTag, UDPipe, Korektor a Charles Translator (CUBBITT).</p>
+    </details>
+    <details>
+      <summary>Posílají se moje texty někam?</summary>
+      <p>Nástroj nemá vlastní server a nic neukládá. Texty se posílají přímo z vašeho prohlížeče na akademické API ÚFAL (LINDAT) ke zpracování. Anonymizér navíc nabízí plně offline lokální mód, kde text neopustí váš počítač.</p>
+    </details>
+    <details>
+      <summary>Jak anonymizovat český text pro GDPR?</summary>
+      <p>V nástroji Anonymizace vložte text a citlivé údaje (jména, rodná čísla, adresy, telefony, IČO, e-maily) se nahradí placeholdery jako OSOBA1 nebo MESTO1. K dispozici je offline regex mód i přesnější mód s reálným NER od ÚFAL.</p>
+    </details>
+    <details>
+      <summary>Jaké jazyky umí překladač?</summary>
+      <p>Překlad mezi češtinou, angličtinou, němčinou, francouzštinou, polštinou, ruštinou a ukrajinštinou. Pro češtinu↔angličtinu používá CUBBITT, jeden z nejkvalitnějších dostupných překladačů.</p>
+    </details>
+  </section>
+
+  <footer class="site-footer">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="flogo" href="index.html"><span class="dot"></span> Czech NLP Toolkit</a>
+        <p>České NLP nástroje online, zdarma a přímo v prohlížeči. Postaveno na akademických nástrojích ÚFAL MFF UK — pro lidi, kteří nechtějí řešit instalaci.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Nástroje</h4>
+        <a href="anonymize.html">Anonymizace</a>
+        <a href="#ner">Entity (NER)</a>
+        <a href="#morf">Morfologie</a>
+        <a href="#korek">Pravopis</a>
+        <a href="#prek">Překlad</a>
+      </div>
+      <div class="foot-col">
+        <h4>Zdroje</h4>
+        <a href="https://github.com/Buggy1111/anonymize-mcp" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://pypi.org/project/anonymize-mcp/" target="_blank" rel="noopener">PyPI balíček</a>
+        <a href="https://ufal.mff.cuni.cz/" target="_blank" rel="noopener">ÚFAL MFF UK</a>
+        <a href="https://lindat.mff.cuni.cz/" target="_blank" rel="noopener">LINDAT/CLARIAH</a>
+      </div>
+      <div class="foot-col">
+        <h4>O projektu</h4>
+        <span>Autor: Michal Bürgermeister</span>
+        <a href="mailto:michalbugy12@gmail.com?subject=Czech%20NLP%20Toolkit%20%E2%80%93%20zp%C4%9Btn%C3%A1%20vazba">✉️ Kontakt / nahlásit chybu</a>
+        <span>Pouze nekomerční použití</span>
+        <span class="engines">Engine:
+          <a href="https://ufal.mff.cuni.cz/nametag/3" target="_blank" rel="noopener">NameTag</a> ·
+          <a href="https://ufal.mff.cuni.cz/udpipe/2" target="_blank" rel="noopener">UDPipe</a> ·
+          <a href="https://ufal.mff.cuni.cz/korektor" target="_blank" rel="noopener">Korektor</a> ·
+          <a href="https://lindat.cz/translation" target="_blank" rel="noopener">CUBBITT</a></span>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Czech NLP Toolkit · součást <b>anonymize-mcp</b></span>
+      <span>Postaveno na nástrojích ÚFAL MFF UK 🎓</span>
+    </div>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
+<script src="js/extract-text.js"></script>
+<script src="js/toolkit.js"></script>
+</body>
+</html>

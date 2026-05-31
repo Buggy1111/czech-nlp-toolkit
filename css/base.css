@@ -35,7 +35,21 @@ footer{text-align:center;color:var(--mut);font-size:13px;padding:28px 0 40px}
 .foot-col h4{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--txt);margin-bottom:13px;font-weight:600}
 .foot-col a,.foot-col span{display:block;color:var(--mut);font-size:14px;margin-bottom:9px;transition:color .15s;cursor:pointer}
 .foot-col a:hover{color:var(--acc2)}
+.foot-col span.engines{display:block}
+.foot-col span.engines a{display:inline;margin:0;color:var(--acc2)}
+.foot-col span.engines a:hover{color:var(--txt);text-decoration:underline}
 .foot-bottom{border-top:1px solid var(--line);margin-top:28px;padding-top:18px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;color:var(--mut);font-size:13px}
+
+/* FAQ (viditelná, odpovídá FAQPage JSON-LD) — nativní details, bez JS */
+.faq{margin:10px 0 44px}
+.faq h2{font-size:20px;margin-bottom:16px;text-align:center}
+.faq details{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.faq summary{cursor:pointer;padding:15px 20px;font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:var(--acc2);font-size:22px;font-weight:400;line-height:1;transition:transform .2s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq summary:hover{color:var(--acc2)}
+.faq details p{padding:0 20px 16px;color:var(--mut);font-size:14.5px;line-height:1.65}
 
 /* sdílená responzivita */
 @media(max-width:900px){ .wrap{max-width:100%} }

@@ -45,6 +45,9 @@ table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--panel2)}
 th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
 td.w{font-weight:600} td.l{color:var(--acc2);font-family:monospace} td.p{color:var(--gold)} td.f{color:var(--mut);font-size:12px;font-family:monospace}
+/* tabulka v .out nesmí lámat slova uprostřed (Pav/el → Pavel) */
+.out table th,.out table td{word-break:normal;overflow-wrap:normal}
+td.w,td.l,td.p{white-space:nowrap} td.f{white-space:normal}
 .ins{color:var(--ok);background:rgba(74,222,128,.12);border-radius:4px;padding:0 3px}
 .desc{background:rgba(124,92,255,.06);border:1px solid var(--line);border-left:3px solid var(--acc);
   border-radius:12px;padding:14px 18px;margin-bottom:16px;color:var(--mut);font-size:14px;line-height:1.55}
@@ -54,11 +57,72 @@ td.w{font-weight:600} td.l{color:var(--acc2);font-family:monospace} td.p{color:v
   margin:8px 0 0;padding:14px;border:1px dashed var(--line);border-radius:14px}
 .trust span b{color:var(--gold)}
 
+/* sdílený rámec sekcí (eyebrow + nadpis + podtitulek) */
+.section{padding:30px 0 8px}
+.sec-eyebrow{display:block;text-align:center;font-size:12px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--acc2);margin-bottom:10px}
+.sec-title{text-align:center;font-size:clamp(22px,3.6vw,30px);font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+.sec-sub{text-align:center;color:var(--mut);font-size:15.5px;max-width:620px;margin:0 auto 26px;line-height:1.6}
+
+/* pro koho — persona karty */
+.who{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.who-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;transition:.18s}
+.who-card:hover{border-color:rgba(124,92,255,.5);transform:translateY(-3px)}
+.who-card .ic{font-size:24px;margin-bottom:10px;display:block;line-height:1}
+.who-card h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.who-card p{color:var(--mut);font-size:13.5px;line-height:1.55}
+
+/* jak to funguje — kroky */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 20px}
+.step .num{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;
+  font-weight:700;font-size:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#06070c;margin-bottom:13px}
+.step h3{font-size:15.5px;font-weight:700;margin-bottom:6px}
+.step p{color:var(--mut);font-size:13.5px;line-height:1.55}
+
+/* ochrana dat — hlavní emoční hák */
+.guard{position:relative;margin:6px 0 2px;padding:28px 30px;border-radius:20px;overflow:hidden;
+  background:linear-gradient(135deg,rgba(124,92,255,.13),rgba(34,211,238,.07));border:1px solid rgba(124,92,255,.32)}
+.guard::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(440px circle at 90% -30%,rgba(34,211,238,.2),transparent 60%)}
+.guard .g-in{position:relative;display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:space-between}
+.guard .g-txt{flex:1;min-width:280px}
+.guard .g-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--acc2);margin-bottom:11px}
+.guard h2{font-size:clamp(21px,3vw,28px);font-weight:800;letter-spacing:-.02em;line-height:1.18;margin-bottom:11px}
+.guard h2 b{background:linear-gradient(120deg,var(--acc2),var(--acc));-webkit-background-clip:text;background-clip:text;color:transparent}
+.guard p{color:var(--mut);font-size:15px;line-height:1.62;max-width:640px}
+.guard .g-cta{flex-shrink:0}
+
+/* nástroje jako karty (landing) */
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.tool-card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);
+  border-radius:18px;padding:24px 22px;transition:.18s}
+.tool-card:hover{border-color:rgba(124,92,255,.5);transform:translateY(-4px)}
+.tool-card.feat{border-color:rgba(124,92,255,.45);background:linear-gradient(160deg,rgba(124,92,255,.12),var(--panel) 58%)}
+.tool-card .t-ic{font-size:27px;margin-bottom:13px;line-height:1}
+.tool-card h3{font-size:17px;font-weight:700;margin-bottom:9px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.tool-card .t-badge{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:#06070c;
+  background:linear-gradient(135deg,var(--acc2),var(--acc));padding:3px 9px;border-radius:100px}
+.tool-card p{color:var(--mut);font-size:14px;line-height:1.55;flex:1;margin-bottom:14px}
+.tool-card .t-eng{font-size:12px;color:var(--acc2);margin-bottom:16px}
+.tool-link{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;font-weight:600;font-size:14.5px;
+  color:var(--acc2);padding:9px 17px;border:1px solid rgba(34,211,238,.35);border-radius:11px;
+  background:rgba(34,211,238,.06);transition:.15s}
+.tool-link:hover{background:var(--acc2);color:#06070c;border-color:var(--acc2)}
+.tool-card.feat .tool-link{background:linear-gradient(135deg,var(--acc),#9d7bff);color:#fff;border:none;
+  box-shadow:0 8px 22px rgba(124,92,255,.3)}
+.tool-card.feat .tool-link:hover{transform:translateY(-2px)}
+.tool-card.soon{opacity:.55}
+.tool-card.soon .tool-link{pointer-events:none;color:var(--mut);border-color:var(--line);background:transparent}
+
 .foot-grid{grid-template-columns:1.8fr 1fr 1fr 1fr}
 
 /* responzivita: mobil → ultrawide */
 @media(max-width:820px){ .panes{grid-template-columns:1fr;gap:14px} }
-@media(max-width:760px){ .tabs{gap:6px} .tab{padding:9px 13px;font-size:13px} }
+@media(max-width:760px){ .tabs{gap:6px} .tab{padding:9px 13px;font-size:13px} .who,.steps,.tools{grid-template-columns:1fr 1fr} }
+@media(max-width:520px){ .who,.steps,.tools{grid-template-columns:1fr} }
+@media(max-width:600px){ .guard{padding:22px 18px} .guard .g-in{gap:16px} .guard .g-cta .btn{width:100%;text-align:center} }
 @media(max-width:600px){
   .wrap{padding:0 15px}
   header{padding:16px 0} .logo{font-size:15px}
