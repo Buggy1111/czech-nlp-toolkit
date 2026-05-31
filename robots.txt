@@ -13,4 +13,4 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-Sitemap: https://buggy1111.github.io/czech-nlp-toolkit/sitemap.xml
+Sitemap: https://czech-nlp.js.org/sitemap.xml
