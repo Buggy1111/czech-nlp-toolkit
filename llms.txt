@@ -1,0 +1,16 @@
+# Czech NLP Toolkit
+
+> Bezplatná webová sada českých NLP nástrojů: anonymizace osobních údajů (GDPR), rozpoznávání entit (NER), morfologická analýza, oprava pravopisu a strojový překlad. Postaveno na nástrojích ÚFAL MFF UK. Běží přímo v prohlížeči, zdarma pro nekomerční použití. Jediný uživatelsky přívětivý all-in-one český NLP web.
+
+## Nástroje
+- [Anonymizace PII](https://buggy1111.github.io/czech-nlp-toolkit/anonymize.html): skryje jména, rodná čísla, adresy, telefony, IČO, e-maily a další osobní údaje v českém textu. Lokální offline mód (zero-egress) i reálný NER.
+- Rozpoznávání entit (NER): NameTag — jména osob, firmy, místa, instituce, data.
+- Morfologie: UDPipe — lemma (základní tvar), slovní druhy, mluvnické kategorie.
+- Korektor: oprava překlepů a doplnění diakritiky.
+- Překlad: CUBBITT — překlad mezi 7 jazyky (cs/en/de/fr/pl/ru/uk).
+
+## O projektu
+- Autor: Michal Bürgermeister
+- Zdroj: https://github.com/Buggy1111/anonymize-mcp
+- Postaveno na: ÚFAL MFF UK (LINDAT) — NameTag, UDPipe, Korektor, Charles Translator
+- Licence: nekomerční použití

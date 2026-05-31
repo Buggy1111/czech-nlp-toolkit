@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anonymizace českého textu online zdarma — skryj jména, RČ, IČO, adresy (GDPR)</title>
+<meta name="description" content="Bezplatná anonymizace osobních údajů v českém textu přímo v prohlížeči. Skryje jména, rodná čísla, adresy, telefony, IČO, e-maily i krypto adresy. Lokální offline mód (zero-egress) nebo reálný NER od ÚFAL. Pro GDPR a citlivá data.">
+<meta name="keywords" content="anonymizace textu online, anonymizace osobních údajů, GDPR anonymizace, skrytí rodného čísla, PII redakce čeština, anonymizace dokumentů, ÚFAL, NameTag, MasKIT, zero-egress">
+<meta name="author" content="Michal Bürgermeister">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="theme-color" content="#06070c">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="favicon.svg">
+<link rel="manifest" href="site.webmanifest">
+<link rel="canonical" href="https://buggy1111.github.io/czech-nlp-toolkit/anonymize.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Czech NLP Toolkit">
+<meta property="og:locale" content="cs_CZ">
+<meta property="og:title" content="Anonymizace českého textu online zdarma (GDPR)">
+<meta property="og:description" content="Skryj jména, rodná čísla, adresy, IČO a další PII v českém textu. Offline lokální mód i reálný NER od ÚFAL. Běží v prohlížeči.">
+<meta property="og:url" content="https://buggy1111.github.io/czech-nlp-toolkit/anonymize.html">
+<meta property="og:image" content="https://buggy1111.github.io/czech-nlp-toolkit/og-image.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Anonymizace českého textu online zdarma (GDPR)">
+<meta name="twitter:description" content="Skryj osobní údaje v českém textu — offline i reálný NER od ÚFAL.">
+<meta name="twitter:image" content="https://buggy1111.github.io/czech-nlp-toolkit/og-image.svg">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/anonymize.css">
+</head>
+<body>
+<noscript><div style="background:#7c5cff;color:#fff;text-align:center;padding:11px;font-family:sans-serif;font-size:14px">Tento nástroj potřebuje zapnutý JavaScript.</div></noscript>
+<div class="wrap">
+  <header>
+    <a class="logo" href="index.html" style="text-decoration:none"><span class="dot"></span> anonymize<small>-mcp</small></a>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="gh" href="index.html">← Všechny nástroje</a>
+      <a class="gh" href="https://github.com/Buggy1111/anonymize-mcp" target="_blank" rel="noopener">GitHub →</a>
+    </div>
+  </header>
+  <section class="hero">
+    <div class="pill">🔒 Demo běží <b>plně v prohlížeči</b> · žádný text neodchází</div>
+    <h1>Anonymizuj český text <span class="grad">naživo</span></h1>
+    <p>Vlož text vlevo (nebo zkus příklad) a sleduj, jak se citlivá data nahradí placeholdery.
+      Vhodné pro <b>právní spisy, lékařské zprávy, faktury i úřední dokumenty</b> — kdekoliv je potřeba skrýt osobní údaje (GDPR).
+      Lokální mód běží plně v prohlížeči, plný NER využívá ÚFAL NameTag.</p>
+  </section>
+  <div class="mode">
+    <label><input type="radio" name="mode" value="local" checked> 🔒 Lokální (regex, offline)</label>
+    <label><input type="radio" name="mode" value="ner"> 🧠 Plný NER — reálná jména přes ÚFAL</label>
+  </div>
+  <div class="nerinfo" id="nerinfo"></div>
+  <div class="examples" id="examples"></div>
+  <div style="text-align:center;margin:0 0 12px"><label class="upload">📎 Nahrát soubor (PDF, Word, TXT)<input type="file" accept=".txt,.pdf,.docx" id="anon-file" hidden></label> <span id="anon-fst" style="font-size:12px;color:var(--mut)"></span></div>
+  <div class="panes">
+    <div class="pane">
+      <div class="ph"><span>Vstup</span><span id="incount">0 znaků</span></div>
+      <textarea id="input" placeholder="Sem vlož český text se jmény, rodnými čísly, IČO, telefony…"></textarea>
+    </div>
+    <div class="pane">
+      <div class="ph"><span>Anonymizováno</span><button class="copy" id="copy">kopírovat</button></div>
+      <div class="out" id="output"></div>
+    </div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="tablewrap">
+    <div class="th"><span>Náhrady</span><span id="repcount">0</span></div>
+    <div id="table"></div>
+  </div>
+
+  <section class="full">
+    <h3>Co umí plný nástroj <span style="color:var(--mut);font-weight:400;font-size:14px">— toto demo ukazuje jen anonymizaci v prohlížeči</span></h3>
+    <div class="fsub">anonymize-mcp = 6 nástrojů postavených na reálném NLP od ÚFAL MFF UK. Demo nahoře běží client-side (regex vrstva). Plný nástroj (pip install) přidává:</div>
+    <div class="tg">
+      <div class="ti on"><b>🔒 anonymize</b><span>MasKIT + NameTag + 80+ PII vzorů napříč 9 sektory, zero-egress lokální mód</span></div>
+      <div class="ti"><b>🧠 extract_entities</b><span>NER přes NameTag 3 — 35 jazyků, bohatý CNEC tagset</span></div>
+      <div class="ti"><b>📊 analyze_morphology</b><span>UDPipe — lemma, slovní druhy, závislostní parse</span></div>
+      <div class="ti"><b>📖 check_readability</b><span>PONK — čitelnost úředních a právních textů</span></div>
+      <div class="ti"><b>✍️ correct_text</b><span>Korektor — spellcheck + doplnění diakritiky</span></div>
+      <div class="ti"><b>🌍 translate_text</b><span>Charles Translator — 8 jazyků, 17 přímých párů</span></div>
+    </div>
+  </section>
+
+  <section class="full">
+    <h3>Pro koho je to <span style="color:var(--mut);font-weight:400;font-size:14px">— stress-tested napříč 9 sektory + mezinárodně (94/94 PII v jednom volání)</span></h3>
+    <div class="fsub">Anonymizace se hodí všude, kde se citlivá data potkávají s AI nebo sdílením. Níže use-casy z praxe — plný výčet 80+ PII vzorů a podpora 35 jazyků je na <a href="https://github.com/Buggy1111/anonymize-mcp" target="_blank" rel="noopener" style="color:var(--acc2)">GitHubu</a>.</div>
+    <div class="tg">
+      <div class="ti"><b>⚖️ Právo / advokáti</b><span>anonymizace spisu před AI review, GDPR — jména, RČ, adresy, č.j., sp. zn., IBAN, OP, datovky</span></div>
+      <div class="ti"><b>🏥 Medicína / lékaři</b><span>propouštěcí zprávy pro výzkum a statistiku — RČ, IČZ, č. pojištěnce, kontakty lékaře; klinické kódy MKN-10 zachované</span></div>
+      <div class="ti"><b>🎓 Věda / akademie</b><span>peer review, citace v publikaci — ORCID, Researcher ID, e-maily kolegů, granty</span></div>
+      <div class="ti"><b>💳 Bankovnictví</b><span>compliance, výpisy do AI, vykazování — č. ú., karta, IBAN, VS/KS/SS</span></div>
+      <div class="ti"><b>🏠 Reality / katastr</b><span>anonymizace výpisů z KN a smluv — LV, parcely, k. ú., vlastník + RČ + adresa</span></div>
+      <div class="ti"><b>🚗 Pojišťovny</b><span>likvidace škod, AI analýza — VIN, SPZ, č. pojistky, TP, OP, RČ pojištěného</span></div>
+      <div class="ti"><b>📜 Notáři</b><span>notářské zápisy pro AI summary — NZ, OP, datovka notáře, sp. zn.</span></div>
+      <div class="ti"><b>📚 Školství / studijní</b><span>potvrzení o studiu, statistiky studentů — UČO, studijní č., ISIC, kontakty</span></div>
+      <div class="ti"><b>🔬 Výzkum / NGO</b><span>anonymizace korpusu pro etiku výzkumu — vše výše + zachování klinických a právních kódů</span></div>
+      <div class="ti"><b>🌍 Mezinárodní</b><span>doklady US/UK/DE/FR/IT/ES/PL/RU/IN, crypto peněženky, API tokeny, EU VAT (28 zemí), IBAN (30+ zemí)</span></div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <div class="flogo"><span class="dot"></span> anonymize-mcp</div>
+        <p>Anonymizace osobních údajů v českém textu — zdarma, v prohlížeči. Lokální offline mód i reálný NER od ÚFAL MFF UK. Pro GDPR a citlivá data.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Další nástroje</h4>
+        <a href="index.html">Czech NLP Toolkit</a>
+        <a href="index.html">Rozpoznávání entit</a>
+        <a href="index.html">Morfologie</a>
+        <a href="index.html">Pravopis a překlad</a>
+      </div>
+      <div class="foot-col">
+        <h4>O projektu</h4>
+        <a href="https://github.com/Buggy1111/anonymize-mcp" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://pypi.org/project/anonymize-mcp/" target="_blank" rel="noopener">pip install anonymize-mcp</a>
+        <a href="https://ufal.mff.cuni.cz/" target="_blank" rel="noopener">ÚFAL MFF UK</a>
+        <a href="mailto:michalbugy12@gmail.com?subject=Czech%20NLP%20Toolkit%20%E2%80%93%20zp%C4%9Btn%C3%A1%20vazba">✉️ Kontakt / nahlásit chybu</a>
+        <span>Autor: Michal Bürgermeister</span>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 anonymize-mcp · jen pro nekomerční použití</span>
+      <span>Postaveno na ÚFAL NameTag + MasKIT 🎓</span>
+    </div>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
+<script src="js/extract-text.js"></script>
+<script src="js/anonymize-engine.js"></script>
+<script src="js/anonymize-app.js"></script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Anonymizace českého textu (anonymize-mcp)",
+  "url": "https://buggy1111.github.io/czech-nlp-toolkit/anonymize.html",
+  "description": "Bezplatná anonymizace osobních údajů (PII) v českém textu přímo v prohlížeči. Lokální offline mód i reálný NER od ÚFAL MFF UK. Pro GDPR a citlivá data.",
+  "applicationCategory": "SecurityApplication",
+  "operatingSystem": "All (web browser)",
+  "inLanguage": "cs",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CZK" },
+  "featureList": ["Anonymizace 19 typů PII", "Lokální offline mód (zero-egress)", "Reálný NER (ÚFAL NameTag)", "Live zvýraznění a tabulka náhrad"],
+  "creator": { "@type": "Person", "name": "Michal Bürgermeister" },
+  "isBasedOn": "https://github.com/Buggy1111/anonymize-mcp"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Jak zdarma anonymizovat český text pro GDPR?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Vložte text do tohoto nástroje a osobní údaje (jména, rodná čísla, adresy, telefony, IČO, e-maily) se automaticky nahradí placeholdery jako OSOBA1 nebo MESTO1. Lokální mód běží zcela offline ve vašem prohlížeči, mód s reálným NER používá akademické API ÚFAL." } },
+    { "@type": "Question", "name": "Opustí můj text počítač?",
+      "acceptedAnswer": { "@type": "Answer", "text": "V lokálním (regex) módu ne — anonymizace probíhá zcela ve vašem prohlížeči, žádný text se neodesílá (zero-egress). V módu s reálným NER se text posílá na akademické API ÚFAL ke zpracování." } }
+  ]
+}
+</script>
+</body>
+</html>

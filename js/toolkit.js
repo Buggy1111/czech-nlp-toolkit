@@ -1,0 +1,137 @@
+"use strict";
+/* toolkit.js — multi-nástrojový toolkit (NER, morfologie, korektor, překlad).
+   Vše volá ÚFAL LINDAT API přímo z prohlížeče. Závisí na extract-text.js (extractText). */
+const API="https://lindat.mff.cuni.cz/services";
+
+// napoj všechny upload inputy na cílový textarea
+function wireUploads(){
+  document.querySelectorAll('input[type="file"][data-target]').forEach(function(inp){
+    inp.addEventListener("change",async function(){
+      const f=inp.files&&inp.files[0]; if(!f) return;
+      const ta=document.getElementById(inp.dataset.target);
+      const st=inp.dataset.status?document.getElementById(inp.dataset.status):null;
+      if(st){st.className="status";st.textContent="⏳ načítám "+f.name+"…";}
+      try{
+        if(f.size>10*1024*1024) throw new Error("soubor je moc velký (max 10 MB)");
+        const txt=await extractText(f);
+        ta.value=txt.slice(0,20000);
+        ta.dispatchEvent(new Event("input"));
+        if(st){st.className="status ok";st.textContent="✅ načteno: "+f.name+" ("+ta.value.length+" znaků)";}
+      }catch(e){ if(st){st.className="status err";st.textContent="⚠️ "+e.message;} }
+      inp.value="";
+    });
+  });
+}
+function $(id){return document.getElementById(id);}
+function clr(el){while(el.firstChild)el.removeChild(el.firstChild);}
+function setStatus(el,msg,cls){el.className="status"+(cls?" "+cls:"");el.textContent=msg;}
+
+// ── taby ──
+document.querySelectorAll(".tab:not(.dis)").forEach(t=>t.onclick=function(){
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  document.querySelector('.panel[data-p="'+t.dataset.t+'"]').classList.add("active");
+});
+
+const MAX_CHARS=20000;
+async function post(url,params){
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),30000); // ať se UI nezasekne
+  try{
+    const body=Object.entries(params).map(([k,v])=>k+"="+encodeURIComponent(v)).join("&");
+    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body,signal:ctrl.signal});
+    if(!r.ok) throw new Error("API "+r.status);
+    return r;
+  }catch(e){
+    if(e.name==="AbortError") throw new Error("vypršel časový limit (30 s)");
+    throw e;
+  }finally{ clearTimeout(timer); }
+}
+// guard: prázdný / příliš dlouhý vstup (vyčistí i starý výstup)
+function guard(text,st,out){
+  if(out)clr(out);
+  if(!text.trim()){ setStatus(st,"zadej nějaký text",""); return false; }
+  if(text.length>MAX_CHARS){ setStatus(st,"text je příliš dlouhý (max "+MAX_CHARS.toLocaleString("cs-CZ")+" znaků)","err"); return false; }
+  return true;
+}
+
+// ── NER (NameTag) ──
+const NER_LABEL={P:"osoba",pf:"křestní",ps:"příjmení",gu:"město",gs:"stát",gc:"region",
+  "if":"firma",io:"instituce",ic:"značka",o:"objekt",t:"datum/čas",ty:"rok",td:"den",tm:"měsíc",at:"telefon",az:"PSČ",n:"číslo"};
+function parseConll(c){const ents=[];let cur=null;for(const raw of (c||"").split("\n")){const l=raw.replace(/\r$/,"");
+  if(!l.trim()){if(cur){ents.push(cur);cur=null;}continue;}const p=l.split("\t");if(p.length<2)continue;
+  const tok=p[0],f=p[1].split("|")[0];if(f==="O"){if(cur){ents.push(cur);cur=null;}continue;}
+  if(f.startsWith("B-")){if(cur)ents.push(cur);cur={type:f.slice(2),toks:[tok]};}
+  else if(f.startsWith("I-")){if(cur)cur.toks.push(tok);else cur={type:f.slice(2),toks:[tok]};}}
+  if(cur)ents.push(cur);for(const e of ents)e.text=e.toks.join(" ").replace(/\s+([.,;:!?)])/g,"$1");return ents;}
+$("ner-go").onclick=async function(){const b=this,st=$("ner-st"),out=$("ner-out");if(!guard($("ner-in").value,st,out))return;b.disabled=true;setStatus(st,"⏳ NameTag…");
+  try{const r=await post(API+"/nametag/api/recognize",{data:$("ner-in").value,output:"conll"});
+    const ents=parseConll((await r.json()).result);clr(out);
+    if(!ents.length){out.appendChild(document.createTextNode("Žádné entity."));}
+    else ents.forEach(e=>{const s=document.createElement("span");s.className="ent ent-"+e.type;
+      s.textContent=e.text+" · "+(NER_LABEL[e.type]||e.type);out.appendChild(s);});
+    setStatus(st,ents.length+" entit ✓","ok");
+  }catch(e){setStatus(st,"⚠️ "+e.message,"err");}finally{b.disabled=false;}};
+
+// ── Morfologie (UDPipe) ──
+const UPOS={NOUN:"podst. jméno",PROPN:"vlastní jméno",VERB:"sloveso",AUX:"pom. sloveso",ADJ:"příd. jméno",
+  ADV:"příslovce",PRON:"zájmeno",DET:"determinant",NUM:"číslovka",ADP:"předložka",CCONJ:"spojka",SCONJ:"spojka",
+  PART:"částice",INTJ:"citoslovce",PUNCT:"interpunkce",SYM:"symbol",X:"jiné"};
+$("morf-go").onclick=async function(){const b=this,st=$("morf-st"),out=$("morf-out");if(!guard($("morf-in").value,st,out))return;b.disabled=true;setStatus(st,"⏳ UDPipe…");
+  try{const r=await post(API+"/udpipe/api/process",{data:$("morf-in").value,tokenizer:"",tagger:"",model:"czech",output:"conllu"});
+    const lines=(await r.json()).result.split("\n").filter(l=>l&&!l.startsWith("#"));
+    clr(out);const tbl=document.createElement("table");
+    const thead=document.createElement("thead"),htr=document.createElement("tr");
+    ["Slovo","Lemma","Slovní druh","Rysy"].forEach(h=>{const th=document.createElement("th");th.textContent=h;htr.appendChild(th);});
+    thead.appendChild(htr);tbl.appendChild(thead);const tb=document.createElement("tbody");let n=0;
+    lines.forEach(l=>{const c=l.split("\t");if(c.length<6||c[0].includes("-"))return;n++;
+      const tr=document.createElement("tr");
+      const mk=(cls,txt)=>{const td=document.createElement("td");if(cls)td.className=cls;td.textContent=txt;return td;};
+      tr.appendChild(mk("w",c[1]));tr.appendChild(mk("l",c[2]));tr.appendChild(mk("p",UPOS[c[3]]||c[3]));
+      tr.appendChild(mk("f",c[5]==="_"?"":c[5]));tb.appendChild(tr);});
+    tbl.appendChild(tb);out.appendChild(tbl);setStatus(st,n+" tokenů ✓","ok");
+  }catch(e){setStatus(st,"⚠️ "+e.message,"err");}finally{b.disabled=false;}};
+
+// ── Korektor ──
+$("korek-go").onclick=async function(){const b=this,st=$("korek-st"),out=$("korek-out");if(!guard($("korek-in").value,st,out))return;b.disabled=true;setStatus(st,"⏳ Korektor…");
+  try{const r=await post(API+"/korektor/api/correct",{data:$("korek-in").value,model:"czech-spellchecker-130202"});
+    const corrected=(await r.json()).result;clr(out);
+    const oa=$("korek-in").value.split(/(\s+)/),ca=corrected.split(/(\s+)/);
+    if(oa.length===ca.length){
+      // zarovnané tokeny → zvýrazni jen změněná slova
+      ca.forEach((w,i)=>{if(/^\s+$/.test(w)){out.appendChild(document.createTextNode(w));return;}
+        if(oa[i]!==w){const s=document.createElement("span");s.className="ins";s.textContent=w;out.appendChild(s);}
+        else out.appendChild(document.createTextNode(w));});
+    } else { out.appendChild(document.createTextNode(corrected)); } // jiný počet tokenů → čistý text
+    setStatus(st,"opraveno ✓","ok");
+  }catch(e){setStatus(st,"⚠️ "+e.message,"err");}finally{b.disabled=false;}};
+
+// ── Překlad (Charles Translator) ──
+const LANGS={cs:"čeština",en:"angličtina",de:"němčina",fr:"francouzština",pl:"polština",ru:"ruština",uk:"ukrajinština"};
+function fillLangs(sel,def){Object.keys(LANGS).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=LANGS[k];if(k===def)o.selected=true;sel.appendChild(o);});}
+fillLangs($("prek-src"),"cs");fillLangs($("prek-tgt"),"en");
+$("prek-go").onclick=async function(){const b=this,st=$("prek-st"),out=$("prek-out");
+  const src=$("prek-src").value,tgt=$("prek-tgt").value;
+  if(!guard($("prek-in").value,st,out))return;
+  if(src===tgt){setStatus(st,"vyber různé jazyky","err");return;}
+  b.disabled=true;setStatus(st,"⏳ překládám…");
+  try{const r=await post(API+"/translation/api/v2/languages?src="+src+"&tgt="+tgt,{input_text:$("prek-in").value});
+    const txt=await r.text();clr(out);out.appendChild(document.createTextNode(txt.trim()));
+    setStatus(st,LANGS[src]+" → "+LANGS[tgt]+" ✓","ok");
+  }catch(e){setStatus(st,"⚠️ "+e.message,"err");}finally{b.disabled=false;}};
+
+// ── počítadlo znaků + auto-grow u každého textového pole ──
+function updateCC(ta){const cc=document.getElementById(ta.dataset.cc);if(!cc)return;
+  const n=ta.value.length;cc.textContent=n.toLocaleString("cs-CZ")+" / 20 000 znaků";cc.className="cc"+(n>MAX_CHARS?" over":"");}
+function autoGrow(ta){ta.style.height="auto";ta.style.height=Math.max(ta.scrollHeight,130)+"px";}
+document.querySelectorAll("textarea[data-cc]").forEach(function(ta){
+  ta.style.overflowY="hidden";
+  ta.addEventListener("input",function(){updateCC(ta);autoGrow(ta);});
+  updateCC(ta);autoGrow(ta);
+});
+wireUploads();
+// odkazy v patičce přepnou na příslušnou záložku
+document.querySelectorAll(".foottab").forEach(function(a){a.addEventListener("click",function(){
+  const t=document.querySelector('.tab[data-t="'+a.dataset.t+'"]'); if(t){t.click();window.scrollTo({top:0,behavior:"smooth"});}
+});});

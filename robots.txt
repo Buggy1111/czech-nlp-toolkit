@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# AI / GEO crawlery výslovně vítány
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://buggy1111.github.io/czech-nlp-toolkit/sitemap.xml
