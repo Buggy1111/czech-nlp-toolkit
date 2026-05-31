@@ -1,56 +1,63 @@
 # Czech NLP Toolkit
 
-Bezplatná webová sada českých NLP nástrojů — běží **přímo v prohlížeči**, žádný build, žádné závislosti.
-Postaveno na akademických nástrojích [ÚFAL MFF UK](https://ufal.mff.cuni.cz/) (LINDAT).
+České NLP nástroje online, zdarma a přímo v prohlížeči. Postaveno na akademických nástrojích [ÚFAL MFF UK](https://ufal.mff.cuni.cz/).
 
-🔗 Web pro lidi, kteří nechtějí řešit MCP servery ani instalaci. Doprovod k MCP serveru
-[`anonymize-mcp`](https://github.com/Buggy1111/anonymize-mcp).
+**Web:** https://buggy1111.github.io/czech-nlp-toolkit/
+
+Doprovodný web k MCP serveru [anonymize-mcp](https://github.com/Buggy1111/anonymize-mcp) — pro lidi, kteří nechtějí řešit instalaci ani MCP.
 
 ## Nástroje
 
-| Nástroj | Engine ÚFAL | Co dělá |
-|---|---|---|
-| 🔒 Anonymizace | MasKIT / NameTag | skryje PII (jména, RČ, adresy, IČO, e-maily…) — lokální offline mód i reálný NER |
-| 🧠 Entity (NER) | NameTag | rozpozná osoby, firmy, místa, instituce, data |
-| 📊 Morfologie | UDPipe | lemma, slovní druhy, mluvnické kategorie |
-| ✍️ Pravopis | Korektor | opraví překlepy a doplní diakritiku |
-| 🌍 Překlad | CUBBITT | překlad mezi 7 jazyky (cs/en/de/fr/pl/ru/uk) |
+- **Anonymizace** — skryje osobní údaje (jména, rodná čísla, adresy, telefony, IČO, e-maily) a nahradí je placeholdery (OSOBA1, MESTO1…). Lokální offline mód (regex) i reálný NER. Vlastní stránka `anonymize.html`.
+- **NER** — rozpoznávání pojmenovaných entit (NameTag 3).
+- **Morfologie** — lemma, slovní druh, mluvnické kategorie (UDPipe 2).
+- **Korektor** — oprava překlepů a diakritiky (Korektor).
+- **Překlad** — strojový překlad mezi 7 jazyky (CUBBITT).
+- **Čitelnost** — *připravujeme* (PONK API zatím nepovoluje volání z prohlížeče / CORS).
 
-## Architektura
+## Struktura
 
-Statický web, čistá separace (každý soubor ≤ 400 řádků):
+Statický web bez build kroku. Tři stránky:
 
 ```
-index.html              hub se všemi nástroji (toolkit)
-anonymize.html          plný anonymizér (2 módy, 19 typů PII)
-css/
-  base.css              sdílené tokeny, layout, hlavička, patička
-  toolkit.css           styly toolkitu
-  anonymize.css         styly anonymizéru
-js/
-  extract-text.js       sdílené: soubor → text (PDF/DOCX/TXT)
-  toolkit.js            toolkit: API + 4 nástroje + taby
-  anonymize-engine.js   čistá logika anonymizace (slovníky, regex pasy, NER)
-  anonymize-app.js      DOM vrstva anonymizéru
-favicon.svg · og-image.svg · site.webmanifest
-robots.txt · sitemap.xml · llms.txt
+index.html          — landing: hák ochrany dat, "pro koho", "jak to funguje",
+                      karty nástrojů s prokliky, FAQ
+nastroje.html       — interaktivní nástroje: NER, morfologie, korektor, překlad
+                      (deep-link přes #hash, např. nastroje.html#morf)
+anonymize.html      — plný anonymizér (2 módy, ~19 typů PII, tabulka náhrad)
+
+css/base.css        — sdílené tokeny, layout, header, footer
+css/toolkit.css     — styly landingu i stránky nástrojů
+css/anonymize.css   — styly anonymizéru
+js/extract-text.js  — sdílené čtení PDF/DOCX/TXT (pdf.js + mammoth)
+js/toolkit.js       — logika nástrojů + deep-link přes #hash
+js/anonymize-engine.js — anonymizační logika
+js/anonymize-app.js — DOM vrstva anonymizéru
 ```
 
-Anonymizér: lokální mód běží zcela offline (zero-egress). NER/ostatní nástroje volají
-ÚFAL LINDAT API přímo z prohlížeče (browser-direct, nic se neukládá).
+## Jak to funguje
 
-## Provoz
+Texty jdou **přímo z prohlížeče** na veřejné akademické API ÚFAL LINDAT
+(`https://lindat.mff.cuni.cz/services`). **Žádný vlastní backend, žádný API klíč,
+nic se neukládá.** Anonymizér navíc nabízí plně offline lokální mód, kde text
+prohlížeč vůbec neopustí. Limit 20 000 znaků na požadavek.
 
-Čistě statické — stačí naservírovat složku:
+## Vývoj
+
+Žádný build. Stačí libovolný statický server:
 
 ```bash
 python3 -m http.server 8000
 # → http://localhost:8000
 ```
 
+Konvence: ≤ 400 řádků na soubor, čistá separace logiky a DOM, žádný `innerHTML`
+(jen DOM metody — XSS bezpečnost).
+
 ## Licence
 
-Pouze nekomerční použití. Modely ÚFAL jsou pod CC BY-NC-SA, LINDAT API je bezplatné
-pro akademické a osobní použití.
-
-Autor: **Michal Bürgermeister** · ✉️ michalbugy12@gmail.com
+Nekomerční použití. Engine © ÚFAL MFF UK
+([NameTag](https://ufal.mff.cuni.cz/nametag/3) ·
+[UDPipe](https://ufal.mff.cuni.cz/udpipe/2) ·
+[Korektor](https://ufal.mff.cuni.cz/korektor) ·
+[CUBBITT](https://lindat.cz/translation)).
