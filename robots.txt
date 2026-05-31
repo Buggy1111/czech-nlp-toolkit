@@ -13,4 +13,4 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-Sitemap: https://czech-nlp.js.org/sitemap.xml
+Sitemap: https://anonymizace.js.org/sitemap.xml
