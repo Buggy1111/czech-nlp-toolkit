@@ -23,10 +23,10 @@ textarea{width:100%;min-height:300px;background:transparent;border:none;outline:
 
 .ph-tok{border-radius:6px;padding:1px 5px;font-weight:600;border:1px solid transparent}
 .t-OSOBA,.t-FIRMA,.t-INSTITUCE{background:rgba(124,92,255,.18);color:#c7b6ff;border-color:rgba(124,92,255,.35)}
-.t-MESTO,.t-PSC,.t-ULICE{background:rgba(34,211,238,.15);color:#9be9f5;border-color:rgba(34,211,238,.3)}
+.t-MESTO,.t-PSC,.t-ULICE,.t-CP{background:rgba(34,211,238,.15);color:#9be9f5;border-color:rgba(34,211,238,.3)}
 .t-TELEFON,.t-EMAIL,.t-URL{background:rgba(74,222,128,.14);color:#a7f3c4;border-color:rgba(74,222,128,.3)}
-.t-RC,.t-ICO,.t-DIC,.t-IBAN,.t-UCET,.t-KRYPTO,.t-TOKEN,.t-KARTA,.t-SSN{background:rgba(232,200,138,.14);color:#f0d9a8;border-color:rgba(232,200,138,.3)}
-.t-SPZN,.t-DATUM,.t-SPZ{background:rgba(248,113,113,.13);color:#f8b4b4;border-color:rgba(248,113,113,.3)}
+.t-RC,.t-ICO,.t-DIC,.t-IBAN,.t-UCET,.t-KRYPTO,.t-TOKEN,.t-KARTA,.t-SSN,.t-DSCHRANKA,.t-VIN,.t-DOKID,.t-COP{background:rgba(232,200,138,.14);color:#f0d9a8;border-color:rgba(232,200,138,.3)}
+.t-SPZN,.t-DATUM,.t-SPZ,.t-MKN{background:rgba(248,113,113,.13);color:#f8b4b4;border-color:rgba(248,113,113,.3)}
 
 .mode{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0 14px}
 .mode label{display:flex;align-items:center;gap:8px;padding:9px 16px;border:1px solid var(--line);border-radius:100px;
