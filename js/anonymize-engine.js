@@ -81,10 +81,15 @@ function anonymize(text,nerEnts){
   // i skloňovaná jména ("Tomáše", "Václavu", "Romana") jako CELÉ slovo, ne kmen.
   const DICT_RE=new RegExp("(?<![\\p{L}])(?:"+NAMEALT+")(?:ovi|em|e|a|u|y|i|ě)?(?![\\p{L}])(?:\\s+\\p{Lu}[\\p{Ll}]+){0,2}","gu");
   out=out.replace(DICT_RE,m=>assign(m,"OSOBA","osoba"));
-  // B) anchor na PŘÍJMENÍ (přípona vč. skloňovaných pádů) + volitelné předchozí slovo
-  const SUF="(?:ov(?:[áéýaěy]|ou|i)|sk(?:[áéýaěíou]|ého|ému|ém)|ck[áéýaou]|[čďňřšťž]?n(?:[áéýaěiíou]|ého|ou)|[áí]k(?:[aeuyů]|em|ovi)?|ek(?:[aeu]|em|ovi)?|ič(?:e|ovi)?|[ktlrds]á)";
-  const SUR_RE=new RegExp("(?:(\\p{Lu}[\\p{Ll}]+)\\s+)?(\\p{Lu}[\\p{Ll}]*"+SUF+")(?![\\p{Ll}])","gu");
-  out=out.replace(SUR_RE,function(m,pre,word){const w=word.toLowerCase();return (NOTNAME.has(w)||CITIES.has(w))?m:assign(m,"OSOBA","osoba");});
+  // B) anchor na PŘÍJMENÍ (přípona vč. skloňovaných pádů) + volitelné předchozí slovo.
+  //    ⚠️ JEN LOKÁLNÍ mód. V NER módu NameTag pokryje jména spolehlivěji a tahle
+  //    heuristika by jinak brala adjektiva ("Komerční", "Automobilový", "Rakousko")
+  //    jako příjmení → falešné poplachy / over-redakce čitelných slov.
+  if(!(nerEnts&&nerEnts.length)){
+    const SUF="(?:ov(?:[áéýaěy]|ou|i)|sk(?:[áéýaěíou]|ého|ému|ém)|ck[áéýaou]|[čďňřšťž]?n(?:[áéýaěiíou]|ého|ou)|[áí]k(?:[aeuyů]|em|ovi)?|ek(?:[aeu]|em|ovi)?|ič(?:e|ovi)?|[ktlrds]á)";
+    const SUR_RE=new RegExp("(?:(\\p{Lu}[\\p{Ll}]+)\\s+)?(\\p{Lu}[\\p{Ll}]*"+SUF+")(?![\\p{Ll}])","gu");
+    out=out.replace(SUR_RE,function(m,pre,word){const w=word.toLowerCase();return (NOTNAME.has(w)||CITIES.has(w))?m:assign(m,"OSOBA","osoba");});
+  }
   // C) samostatná křestní jména ze slovníku
   out=out.replace(/\p{Lu}[\p{Ll}]+/gu,m=>FIRST_NAMES.has(m.toLowerCase())?assign(m,"OSOBA","osoba"):m);
   // D) města (slovník vč. pádů)
