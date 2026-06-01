@@ -96,8 +96,24 @@ function anonymize(text,nerEnts){
 // Browser-direct = traffic z prohlížeče uživatele (rozložené, ÚFAL-friendly).
 // NEjde o zero-egress: text odchází na ÚFAL (= default cloud chování MCP).
 const NAMETAG_URL="https://lindat.mff.cuni.cz/services/nametag/api/recognize";
-// io (instituce/soudy) schválně NEanonymizujeme — zůstanou čitelné (jako MasKIT whitelist)
-const NER_MAP={P:["OSOBA","osoba"],"if":["FIRMA","firma"],gu:["MESTO","město/obec"],gc:["MESTO","město/obec"],PER:["OSOBA","osoba"],ORG:["FIRMA","firma"],LOC:["MESTO","město/obec"]};
+// Klasifikace CNEC typu (NameTag) → naše kategorie. PREFIX-based, ne whitelist:
+// NameTag dává jemné podtypy (ps=příjmení, pf=křestní, gu/gs/gr=místa, io/ic=instituce,
+// td/ty=datum/rok). Dřívější whitelist {P,if,gu,gc} propadal vše ostatní → unikala
+// samostatná příjmení ("Babiš"), data ("2. září 1954") i instituce (KSČ, StB).
+// Pozn.: anglický model dává PER/ORG/LOC (velká písmena, neřídí se CNEC prefixem).
+function nerCategory(type){
+  if(!type) return null;
+  if(type==="PER") return ["OSOBA","osoba"];
+  if(type==="ORG") return ["INSTITUCE","instituce"];
+  if(type==="LOC") return ["MESTO","místo"];
+  if(type==="if") return ["FIRMA","firma"];   // if = komerční firma (zvlášť od institucí)
+  const c=type[0];                             // CNEC: P/p=osoba, g=místo, i=instituce, T/t=datum
+  if(c==="P"||c==="p") return ["OSOBA","osoba"];
+  if(c==="g")          return ["MESTO","místo"];
+  if(c==="i")          return ["INSTITUCE","instituce"];
+  if(c==="T"||c==="t") return ["DATUM","datum"];
+  return null;                                 // čísla (n*), média (m*), artefakty (o*) … neřešíme
+}
 function parseConll(conll){
   const ents=[]; let cur=null;
   for(const raw of (conll||"").split("\n")){
@@ -118,10 +134,15 @@ async function fetchNER(text){
     body:"data="+encodeURIComponent(text)+"&output=conll"});
   if(!r.ok) throw new Error("NameTag API "+r.status);
   const d=await r.json();
-  return parseConll(d.result).filter(e=>NER_MAP[e.type]).map(e=>({text:e.text,key:NER_MAP[e.type][0],label:NER_MAP[e.type][1]}));
+  const ents=[];
+  for(const e of parseConll(d.result)){
+    const cat=nerCategory(e.type);
+    if(cat) ents.push({text:e.text,key:cat[0],label:cat[1]});
+  }
+  return ents;
 }
 
-const TYPE_LABELS={OSOBA:"osoba",FIRMA:"firma",MESTO:"město",ULICE:"ulice",PSC:"PSČ",TELEFON:"telefon",EMAIL:"email",
+const TYPE_LABELS={OSOBA:"osoba",FIRMA:"firma",INSTITUCE:"instituce",MESTO:"místo",ULICE:"ulice",PSC:"PSČ",TELEFON:"telefon",EMAIL:"email",
   URL:"URL",RC:"rodné číslo",ICO:"IČO",DIC:"DIČ",IBAN:"IBAN",UCET:"účet",SPZN:"sp. zn.",DATUM:"datum",
   KRYPTO:"krypto",TOKEN:"API token",KARTA:"karta",SSN:"US SSN",SPZ:"SPZ"};
-const PH_RE=/\b(?:OSOBA|FIRMA|MESTO|ULICE|PSC|TELEFON|EMAIL|URL|RC|ICO|DIC|IBAN|UCET|SPZN|DATUM|KRYPTO|TOKEN|KARTA|SSN|SPZ)\d+\b/g;
+const PH_RE=/\b(?:OSOBA|FIRMA|INSTITUCE|MESTO|ULICE|PSC|TELEFON|EMAIL|URL|RC|ICO|DIC|IBAN|UCET|SPZN|DATUM|KRYPTO|TOKEN|KARTA|SSN|SPZ)\d+\b/g;
