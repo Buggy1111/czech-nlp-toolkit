@@ -32,7 +32,7 @@ footer{text-align:center;color:var(--mut);font-size:13px;padding:28px 0 40px}
 .foot-brand .flogo{display:flex;align-items:center;gap:9px;font-weight:700;margin-bottom:12px}
 .foot-brand .flogo .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 0 14px var(--acc)}
 .foot-brand p{color:var(--mut);font-size:13.5px;max-width:320px;line-height:1.6}
-.foot-col h4{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--txt);margin-bottom:13px;font-weight:600}
+.foot-col h2{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--txt);margin-bottom:13px;font-weight:600}
 .foot-col a,.foot-col span{display:block;color:var(--mut);font-size:14px;margin-bottom:9px;transition:color .15s;cursor:pointer}
 .foot-col a:hover{color:var(--acc2)}
 .foot-col span.engines{display:block}

@@ -91,7 +91,7 @@ td.w,td.l,td.p{white-space:nowrap} td.f{white-space:normal}
   letter-spacing:.1em;text-transform:uppercase;color:var(--acc2);margin-bottom:11px}
 .guard h2{font-size:clamp(21px,3vw,28px);font-weight:800;letter-spacing:-.02em;line-height:1.18;margin-bottom:11px}
 .guard h2 b{background:linear-gradient(120deg,var(--acc2),var(--acc));-webkit-background-clip:text;background-clip:text;color:transparent}
-.guard p{color:var(--mut);font-size:15px;line-height:1.62;max-width:640px}
+.guard p{color:#c4ccdb;font-size:15px;line-height:1.62;max-width:640px}
 .guard .g-cta{flex-shrink:0}
 
 /* nástroje jako karty (landing) */
@@ -113,7 +113,7 @@ td.w,td.l,td.p{white-space:nowrap} td.f{white-space:normal}
 .tool-card.feat .tool-link{background:linear-gradient(135deg,var(--acc),#9d7bff);color:#fff;border:none;
   box-shadow:0 8px 22px rgba(124,92,255,.3)}
 .tool-card.feat .tool-link:hover{transform:translateY(-2px)}
-.tool-card.soon{opacity:.55}
+.tool-card.soon .t-ic{opacity:.5}
 .tool-card.soon .tool-link{pointer-events:none;color:var(--mut);border-color:var(--line);background:transparent}
 
 .foot-grid{grid-template-columns:1.8fr 1fr 1fr 1fr}

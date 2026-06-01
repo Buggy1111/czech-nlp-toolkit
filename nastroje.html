@@ -31,6 +31,7 @@
     <a class="logo" href="index.html"><span class="dot"></span> Czech NLP <small>Toolkit</small></a>
     <a class="gh" href="index.html">← Zpět na přehled</a>
   </header>
+  <main>
   <section class="hero">
     <div class="pill">🎓 Powered by <b style="color:var(--gold);margin:0 4px">ÚFAL MFF UK</b> · běží přímo v prohlížeči</div>
     <h1>Nástroje</h1>
@@ -63,7 +64,7 @@
     <div class="controls"><button class="btn" id="ner-go">Rozpoznat entity</button><label class="upload">📎 Soubor<input type="file" accept=".txt,.pdf,.docx" data-target="ner-in" data-status="ner-st" hidden></label><span class="status" id="ner-st"></span></div>
     <div class="panes">
       <div class="card"><div class="ch"><span>Vstupní text</span><span class="cc" id="ner-cc"></span></div>
-        <textarea id="ner-in" data-cc="ner-cc">Pavel Novák z firmy Seznam.cz se sešel s Marií Svobodovou v Brně 3. února 2026.</textarea></div>
+        <textarea id="ner-in" data-cc="ner-cc" aria-label="Vstupní text pro rozpoznávání entit">Pavel Novák z firmy Seznam.cz se sešel s Marií Svobodovou v Brně 3. února 2026.</textarea></div>
       <div class="out" id="ner-out"></div>
     </div>
   </div>
@@ -74,7 +75,7 @@
     <div class="controls"><button class="btn" id="morf-go">Analyzovat</button><label class="upload">📎 Soubor<input type="file" accept=".txt,.pdf,.docx" data-target="morf-in" data-status="morf-st" hidden></label><span class="status" id="morf-st"></span></div>
     <div class="panes">
       <div class="card"><div class="ch"><span>Vstupní text</span><span class="cc" id="morf-cc"></span></div>
-        <textarea id="morf-in" data-cc="morf-cc">Pavel viděl tři velké psy a rychle utíkal domů.</textarea></div>
+        <textarea id="morf-in" data-cc="morf-cc" aria-label="Vstupní text pro morfologickou analýzu">Pavel viděl tři velké psy a rychle utíkal domů.</textarea></div>
       <div class="out mono" id="morf-out"></div>
     </div>
   </div>
@@ -85,7 +86,7 @@
     <div class="controls"><button class="btn" id="korek-go">Opravit</button><label class="upload">📎 Soubor<input type="file" accept=".txt,.pdf,.docx" data-target="korek-in" data-status="korek-st" hidden></label><span class="status" id="korek-st"></span></div>
     <div class="panes">
       <div class="card"><div class="ch"><span>Text s překlepy / bez diakritiky</span><span class="cc" id="korek-cc"></span></div>
-        <textarea id="korek-in" data-cc="korek-cc">Muj kolega napsal zpravu bez diakritiky a s nekolika preklepy.</textarea></div>
+        <textarea id="korek-in" data-cc="korek-cc" aria-label="Text s překlepy nebo bez diakritiky">Muj kolega napsal zpravu bez diakritiky a s nekolika preklepy.</textarea></div>
       <div class="out" id="korek-out"></div>
     </div>
   </div>
@@ -94,11 +95,11 @@
   <div class="panel" data-p="prek">
     <div class="desc"><b>Strojový překlad</b> — přeloží text mezi 7 jazyky. <b>K čemu:</b> běžný i odborný text. <span class="eng">⚙️ CUBBITT od ÚFAL — patří ke špičce v CS↔EN, kvalitou srovnatelný s profesionálním překladem</span></div>
     <div class="controls">
-      <select id="prek-src"></select><span style="color:var(--mut)">→</span><select id="prek-tgt"></select>
+      <select id="prek-src" aria-label="Zdrojový jazyk"></select><span style="color:var(--mut)">→</span><select id="prek-tgt" aria-label="Cílový jazyk"></select>
       <button class="btn" id="prek-go">Přeložit</button><label class="upload">📎 Soubor<input type="file" accept=".txt,.pdf,.docx" data-target="prek-in" data-status="prek-st" hidden></label><span class="status" id="prek-st"></span></div>
     <div class="panes">
       <div class="card"><div class="ch"><span>Text k překladu</span><span class="cc" id="prek-cc"></span></div>
-        <textarea id="prek-in" data-cc="prek-cc">Dobrý den, rád bych si objednal dva lístky na zítřejší představení.</textarea></div>
+        <textarea id="prek-in" data-cc="prek-cc" aria-label="Text k překladu">Dobrý den, rád bych si objednal dva lístky na zítřejší představení.</textarea></div>
       <div class="out" id="prek-out"></div>
     </div>
   </div>
@@ -134,6 +135,7 @@
     </details>
   </section>
 
+  </main>
   <footer class="site-footer">
     <div class="foot-grid">
       <div class="foot-brand">
@@ -141,7 +143,7 @@
         <p>České NLP nástroje online, zdarma a přímo v prohlížeči. Postaveno na akademických nástrojích ÚFAL MFF UK — pro lidi, kteří nechtějí řešit instalaci.</p>
       </div>
       <div class="foot-col">
-        <h4>Nástroje</h4>
+        <h2>Nástroje</h2>
         <a href="anonymize.html">Anonymizace</a>
         <a href="#ner">Entity (NER)</a>
         <a href="#morf">Morfologie</a>
@@ -149,14 +151,14 @@
         <a href="#prek">Překlad</a>
       </div>
       <div class="foot-col">
-        <h4>Zdroje</h4>
+        <h2>Zdroje</h2>
         <a href="https://github.com/Buggy1111/anonymize-mcp" target="_blank" rel="noopener">GitHub</a>
         <a href="https://pypi.org/project/anonymize-mcp/" target="_blank" rel="noopener">PyPI balíček</a>
         <a href="https://ufal.mff.cuni.cz/" target="_blank" rel="noopener">ÚFAL MFF UK</a>
         <a href="https://lindat.mff.cuni.cz/" target="_blank" rel="noopener">LINDAT/CLARIAH</a>
       </div>
       <div class="foot-col">
-        <h4>O projektu</h4>
+        <h2>O projektu</h2>
         <span>Autor: Michal Bürgermeister</span>
         <a href="mailto:michalbugy12@gmail.com?subject=Czech%20NLP%20Toolkit%20%E2%80%93%20zp%C4%9Btn%C3%A1%20vazba">✉️ Kontakt / nahlásit chybu</a>
         <span>Pouze nekomerční použití</span>

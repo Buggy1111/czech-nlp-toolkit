@@ -48,7 +48,7 @@ td .badge{font-size:11px;color:var(--mut);border:1px solid var(--line);border-ra
 .empty{padding:26px 18px;color:var(--mut);text-align:center}
 
 .full{margin:10px 0 40px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:28px}
-.full h3{font-size:18px;margin-bottom:6px}
+.full h2{font-size:18px;margin-bottom:6px}
 .full .fsub{color:var(--mut);font-size:14px;margin-bottom:20px}
 .full .tg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .full .ti{border:1px solid var(--line);border-radius:12px;padding:14px}
