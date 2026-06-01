@@ -16,23 +16,47 @@ const CITIES = new Set(["praha","praze","prahy","prahou","prahu","brno","brně",
   "jihlava","jihlavě","jihlavy","přerov","prerov","přerově","přerova","studénka","studenka","studénce","studénky","kopřivnice","koprivnice","kopřivnici",
   "odry","oder","odrách","fulnek","fulneku","fulneku","příbor","pribor","příboře","bílovec","bilovec","bílovce","nový jičín","novém jičíně"]);
 
+// validátory číselných identifikátorů — pustí redakci jen u reálných RČ/karet/IBAN,
+// aby volnější vzory (10/16 číslic) neredigovaly náhodná čísla (over-redakce).
+function validRC(s){                          // 10 číslic bez lomítka
+  let mm=+s.slice(2,4);
+  if(mm>70)mm-=70; else if(mm>50)mm-=50; else if(mm>20)mm-=20;  // ženy +50, 2000+ +20/+70
+  const dd=+s.slice(4,6);
+  if(mm<1||mm>12||dd<1||dd>31) return false;
+  if((+s)%11===0) return true;                // RČ od 1954 dělitelné 11
+  return (+s.slice(0,9))%11===10 && s[9]==="0"; // historická výjimka (1954–85)
+}
+function luhn(s){                             // platební karta — Luhnova kontrola
+  let sum=0,alt=false;
+  for(let i=s.length-1;i>=0;i--){let d=+s[i]; if(alt){d*=2; if(d>9)d-=9;} sum+=d; alt=!alt;}
+  return sum%10===0;
+}
+function validIBAN(s){                         // mod-97 checksum
+  const t=s.replace(/\s/g,"").toUpperCase();
+  if(t.length<15||t.length>34||!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(t)) return false;
+  const r=t.slice(4)+t.slice(0,4); let rem=0;
+  for(const ch of r){const v=ch>="A"?ch.charCodeAt(0)-55:+ch; rem=(rem*(v>9?100:10)+v)%97;}
+  return rem===1;
+}
 // pořadí = priorita: specifické PŘED obecným, ať si nepřeberou číslice.
 // Položky s `cap:1` redigují jen zachycenou skupinu — kontext (trigger) zůstává čitelný.
 const MESIC="(?:led(?:na|en)|únor[ay]?|březn[a]?|březen|dub(?:na|en)|květ(?:na|en)|červ(?:na|en|enec|ence)|srp(?:na|en)|září|říj(?:na|en)|listopad[ua]?|prosin(?:ce|ec))";
 const STRUCT = [
   {key:"URL",     label:"URL",            re:/\bhttps?:\/\/[^\s<>"]+/gi},
   {key:"EMAIL",   label:"email",          re:/\b[\w.+-]+@[\w-]+\.[\w.-]{2,}\b/g},
-  {key:"TOKEN",   label:"API token",      re:/\b(?:sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|AIza[0-9A-Za-z_-]{35})\b/g},
+  {key:"TOKEN",   label:"API token",      re:/\b(?:sk-[A-Za-z0-9-]{20,}|github_pat_[A-Za-z0-9_]{60,}|ghp_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|AIza[0-9A-Za-z_-]{35})\b/g},
   {key:"KRYPTO",  label:"krypto adresa",  re:/\b(?:0x[a-fA-F0-9]{40}|bc1[a-z0-9]{25,59}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})\b/g},
   // ulice: a) koncovka+číslo  b) kontext (bytem/sídlem)+víceslovný název+číslo
   {key:"ULICE",   label:"ulice",          re:/\p{Lu}[\p{Ll}]+(?:ská|cká|ova|ého|ního|í)\s+\d{1,4}(?:\/\d{1,4})?/gu},
   {key:"ULICE",   label:"ulice",  cap:1,  re:/(?:bytem|se\s+sídlem|sídlem|trvale\s+bytem|adres\p{L}+)\s+(\p{Lu}[\p{L}]+(?:\s+(?:nám\.|náměstí|[\p{Lu}\p{Ll}.]+)){0,2}\s+\d{1,4}(?:\/\d{1,4})?)/gu},
   // DIČ PŘED IBAN (oba CZ+číslice; \b…\b zabrání kolizi na délce)
   {key:"DIC",     label:"DIČ",            re:/\b(?:CZ|SK|DE|AT|PL)\d{8,11}\b/g},
-  {key:"IBAN",    label:"IBAN",           re:/\b[A-Z]{2}\d{2}(?:\s?[A-Z0-9]{4}){2,7}\b/g},
+  {key:"IBAN",    label:"IBAN",           re:/\b[A-Za-z]{2}\d{2}(?:\s?[A-Za-z0-9]{4}){2,7}\b/g, valid:validIBAN},
   {key:"VIN",     label:"VIN",            re:/\b[A-HJ-NPR-Z0-9]{17}\b/g},
   {key:"KARTA",   label:"platební karta", re:/\b(?:\d{4}[ -]){3}\d{4}\b/g},
+  {key:"KARTA",   label:"platební karta", re:/\b\d{16}\b/g, valid:luhn},          // bez separátorů (Luhn)
   {key:"RC",      label:"rodné číslo",    re:/\b\d{6}\/\d{3,4}\b/g},
+  {key:"RC",      label:"rodné číslo",    re:/\b\d{10}\b/g, valid:validRC},        // bez lomítka (datum+mod11)
   {key:"SPZN",    label:"spisová značka", re:/\b\d{1,3}\s?[A-Z]{1,3}\s?\d{1,4}\/\d{4}\b/g},
   // ID datové schránky: kontext „schránk…“ + 7znakový alfanum. token (musí mít číslici)
   {key:"DSCHRANKA",label:"datová schránka",cap:1, re:/[Ss]chránk\p{L}*[\s\S]{0,50}?\b((?=[a-z0-9]*\d)[a-z0-9]{7})\b/gu},
@@ -73,6 +97,7 @@ function anonymize(text,nerEnts){
   for(const item of STRUCT) out=out.replace(item.re,(m,...g)=>{
     const val=item.cap?g[item.cap-1]:m;
     if(val==null||val==="") return m;
+    if(item.valid&&!item.valid(val)) return m;
     const plc=assign(val,item.key,item.label);
     return item.cap? m.replace(val,plc): plc;
   });
