@@ -61,7 +61,7 @@ const STRUCT = [
   // ID datové schránky: kontext „schránk…“ + 7znakový alfanum. token (musí mít číslici)
   {key:"DSCHRANKA",label:"datová schránka",cap:1, re:/[Ss]chránk\p{L}*[\s\S]{0,50}?\b((?=[a-z0-9]*\d)[a-z0-9]{7})\b/gu},
   // kontextová oborová čísla (smlouva/pojistka/škodní/jednací/VS/SS/osobní č./ID/ev.č.)
-  {key:"DOKID",   label:"číslo dokumentu",cap:1, re:/(?:variabiln\p{L}*\s+symbol|specifick\p{L}*\s+symbol|čísl\p{L}*\s+(?:smlouvy|pojistky|pojistné\s+smlouvy|škodní\s+události|jednací|zákaznick\p{L}*|profilu|žáka)|č\.\s*j\.|sp\.\s*zn\.|spisov\p{L}*\s+značk\p{L}*|osobní\s+čísl\p{L}*|ID\s+žáka|eviden\p{L}*\s+čísl\p{L}*|ev\.\s*č\.)[^\d\n]{0,25}?((?:[A-Z]{1,5}[ \/-])?\d[\dA-Za-z]*(?:[\/-][\dA-Za-z]+){0,3})/gu},
+  {key:"DOKID",   label:"číslo dokumentu",cap:1, re:/(?:[Vv]ariabiln\p{L}*\s+symbol|[Ss]pecifick\p{L}*\s+symbol|[Čč]ísl\p{L}*\s+(?:smlouvy|pojistky|pojistné\s+smlouvy|škodní\s+události|jednací|zákaznick\p{L}*|profilu|žáka)|[Čč]\.\s*j\.|[Ss]p\.\s*zn\.|[Ss]pisov\p{L}*\s+značk\p{L}*|[Oo]sobní\s+čísl\p{L}*|ID\s+žáka|[Ee]viden\p{L}*\s+čísl\p{L}*|[Ee]v\.\s*č\.)[^\d\n]{0,25}?((?:[A-Z]{1,5}[ \/-])?\d[\dA-Za-z]*(?:[\/-][\dA-Za-z]+){0,3})/gu},
   // číslo OP (9 číslic) v kontextu — PŘED telefonem
   {key:"COP",     label:"číslo OP",       cap:1, re:/(?:občansk\p{L}*\s+průkaz\p{L}*|čísl\p{L}*\s+OP|OP\s+č\.|č\.\s*OP)[^\d\n]{0,20}?(\d{9})\b/gu},
   // číslo účtu: pomlčková forma NEBO v kontextu „účet/účtu“ (zúženo, ať nebere č.j./roky)
