@@ -99,6 +99,18 @@
     </div>
   </section>
 
+  <section class="faq">
+    <h2>Časté otázky</h2>
+    <details>
+      <summary>Jak zdarma anonymizovat český text pro GDPR?</summary>
+      <p>Vložte text do tohoto nástroje a osobní údaje (jména, rodná čísla, adresy, telefony, IČO, e-maily) se automaticky nahradí placeholdery jako OSOBA1 nebo MESTO1. Lokální mód běží zcela offline ve vašem prohlížeči, mód s reálným NER používá akademické API ÚFAL.</p>
+    </details>
+    <details>
+      <summary>Opustí můj text počítač?</summary>
+      <p>V lokálním (regex) módu ne — anonymizace probíhá zcela ve vašem prohlížeči, žádný text se neodesílá (zero-egress). V módu s reálným NER se text posílá na akademické API ÚFAL ke zpracování.</p>
+    </details>
+  </section>
+
   </main>
   <footer class="site-footer">
     <div class="foot-grid">
@@ -145,6 +157,7 @@
   "applicationCategory": "SecurityApplication",
   "operatingSystem": "All (web browser)",
   "inLanguage": "cs",
+  "dateModified": "2026-06-04",
   "isAccessibleForFree": true,
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CZK" },
   "featureList": ["Anonymizace 19 typů PII", "Lokální offline mód (zero-egress)", "Reálný NER (ÚFAL NameTag)", "Live zvýraznění a tabulka náhrad"],
