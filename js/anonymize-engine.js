@@ -38,6 +38,11 @@ function validIBAN(s){                         // mod-97 checksum
   for(const ch of r){const v=ch>="A"?ch.charCodeAt(0)-55:+ch; rem=(rem*(v>9?100:10)+v)%97;}
   return rem===1;
 }
+function validICO(s){                          // IČO — mod-11 kontrolní číslice (váhy 8..2)
+  let t=0;
+  for(let i=0;i<7;i++) t+=(8-i)*+s[i];
+  return +s[7]===((((11-t)%11)+11)%11)%10;
+}
 // pořadí = priorita: specifické PŘED obecným, ať si nepřeberou číslice.
 // Položky s `cap:1` redigují jen zachycenou skupinu — kontext (trigger) zůstává čitelný.
 const MESIC="(?:led(?:na|en)|únor[ay]?|březn[a]?|březen|dub(?:na|en)|květ(?:na|en)|červ(?:na|en|enec|ence)|srp(?:na|en)|září|říj(?:na|en)|listopad[ua]?|prosin(?:ce|ec))";
@@ -68,15 +73,22 @@ const STRUCT = [
   {key:"UCET",    label:"číslo účtu",     re:/\b\d{1,6}-\d{2,10}\/\d{4}\b/g},
   {key:"UCET",    label:"číslo účtu",     cap:1, re:/úč\p{L}+[^\d\n]{0,12}?((?:\d{1,6}-)?\d{2,10}\/\d{4})\b/gu},
   {key:"SSN",     label:"US SSN",         re:/\b\d{3}-\d{2}-\d{4}\b/g},
-  {key:"TELEFON", label:"telefon",        re:/(?:\+420\s?)?\b\d{3}\s?\d{3}\s?\d{3}\b/g},
+  // telefon: a) s předvolbou +420/+421 — jistota, bereme libovolné členění 9 číslic
+  //          b) bez předvolby — jen reálné CZ prefixy 2–7 (pevné linky+mobily; částky
+  //             „123 456 789“ začínají 1 → propadnou) + stopka na měnu/jednotky/delší čísla
+  {key:"TELEFON", label:"telefon",        re:/\+42[01](?:[\s.-]?\d){9}\b/g},
+  {key:"TELEFON", label:"telefon",        re:/(?<!\d[\s.-])\b[2-7]\d{2}[\s.-]?\d{3}[\s.-]?\d{3}\b(?![\s.-]?\d)(?!\s?(?:Kč|CZK|EUR|USD|€|%|,-|mil|tis))/g},
   {key:"SPZ",     label:"SPZ",            re:/\b\d[A-Z]{1,2}\d?\s?\d{4}\b/g},
   // datum: číselné + slovní měsíc („2. září 1954“)
   {key:"DATUM",   label:"datum",          re:new RegExp("\\b\\d{1,2}\\.\\s?\\d{1,2}\\.\\s?\\d{4}\\b|\\b\\d{1,2}\\.\\s?"+MESIC+"\\s+\\d{4}\\b","giu")},
   // MKN/ICD-10: dekadická forma (E11.9) bez kontextu + nedekadická (I10) v kontextu diagnózy
   {key:"MKN",     label:"diagnóza (MKN)", re:/\b[A-TV-Z]\d{2}\.\d{1,2}\b/g},
   {key:"MKN",     label:"diagnóza (MKN)", cap:1, re:/(?:dg\.|diagnóz\p{L}*|MKN(?:-?10)?|kód\p{L}*\s+diagnóz\p{L}*)[\s\S]{0,30}?\b([A-TV-Z]\d{2})\b/gu},
-  {key:"PSC",     label:"PSČ",            re:/\b\d{3}\s\d{2}\b/g},
-  {key:"ICO",     label:"IČO",            re:/\b\d{8}\b/g},
+  // PSČ: a) kontext „PSČ“ — bere i kompaktní tvar (74221)  b) holý tvar s mezerou,
+  //      ale NE před měnou/jednotkou („250 00 Kč“, „150 96 kusů“) a ne uvnitř delšího čísla
+  {key:"PSC",     label:"PSČ",    cap:1,  re:/PSČ[\s:]{0,3}(\d{3}\s?\d{2})\b/g},
+  {key:"PSC",     label:"PSČ",            re:/(?<!\d\s)\b\d{3}\s\d{2}\b(?![\s.,-]?\d)(?!\s?(?:Kč|CZK|EUR|USD|€|%|,-|[Kk]s\b|kus|km\b|kg\b|mil\b|tis\b|hod\b|let\b|m[²2]?\b|l\b|g\b))/gu},
+  {key:"ICO",     label:"IČO",            re:/\b\d{8}\b/g, valid:validICO},        // mod-11 (ceny/kódy bez platné kontrolní číslice propadnou)
 ];
 
 // placeholdery jsou VELKÝMI písmeny + číslo (OSOBA1) → názvové/strukturní
@@ -104,7 +116,9 @@ function anonymize(text,nerEnts){
   // NER entity z NameTagu (reálná jména/firmy/města) — delší texty dřív
   if(nerEnts&&nerEnts.length){
     const uq=[...new Map(nerEnts.map(e=>[e.text,e])).values()].sort((a,b)=>b.text.length-a.text.length);
-    for(const e of uq){const x=e.text.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");out=out.replace(new RegExp(x,"g"),m=>assign(m,e.key,e.label));}
+    // hranice (?<!písmeno/číslice)…(?!…) — krátká entita („C“) jinak přepisovala
+    // vnitřek už vložených placeholderů (RC1→ROSOBA21) i podřetězce slov (Eva→Evakuace)
+    for(const e of uq){const x=e.text.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");out=out.replace(new RegExp("(?<![\\p{L}\\p{N}])"+x+"(?![\\p{L}\\p{N}])","gu"),m=>assign(m,e.key,e.label));}
   }
   // po NER: číslo popisné/orientační hned za placeholderem místa/ulice — ulici NER
   // nahradil, ale číslo domu zůstalo ("MESTO1 1428/9" → "MESTO1 CP1").
@@ -122,7 +136,14 @@ function anonymize(text,nerEnts){
     "český","česká","české","českého","slovenské","slovenský","slovenská","právní","právního","soudní","soudního",
     "veřejné","veřejný","malá","malé","malý","celá","celé","dlouhá","krásná","správní","daňové","daňový",
     "evropské","evropský","hlavní","hlavního","bytové","bytový","smluvní","kupní","nájemní","příslušné","příslušný",
-    "uvedené","uvedený","oprávněná","oprávněný","povinná","povinný","žalovaná","žalovaný","navrhovaná"]);
+    "uvedené","uvedený","oprávněná","oprávněný","povinná","povinný","žalovaná","žalovaný","navrhovaná",
+    "severní","jižní","východní","západní","střední","státní","mezinárodní","generální","obchodní",
+    "výrobní","provozní","technická","technický","technické","průmyslová","průmyslový","průmyslové",
+    "komerční","automobilová","automobilový","automobilové","mladá","mladé","mladý","lidové","lidová",
+    "lidový","základní","mateřská","mateřské","vysoká","vysoké","odborná","odborné","pracovní","osobní",
+    "rodinná","rodinné","měsíční","roční","denní","týdenní","celková","celkový","celkové","poslední",
+    "národní","národního","výroční","aktuální","původní","spisová","spisové","jednací","závěrečná","závěrečné",
+    "dovolená","dovolené","nemocenská","mzdová","mzdové","platná","platné","písemná","písemné","ústní"]);
   // A) křestní ze slovníku + až 2 následující Velká slova (chytá příjmení i bez
   //    jasné přípony: "Petr Svoboda", "Barbora Vidová Hladká")
   // velké počáteční písmeno přímo v alternaci ([Tt]omáš) → NEpoužíváme /i flag,
@@ -138,7 +159,9 @@ function anonymize(text,nerEnts){
   //    heuristika by jinak brala adjektiva ("Komerční", "Automobilový", "Rakousko")
   //    jako příjmení → falešné poplachy / over-redakce čitelných slov.
   if(!(nerEnts&&nerEnts.length)){
-    const SUF="(?:ov(?:[áéýaěy]|ou|i)|sk(?:[áéýaěíou]|ého|ému|ém)|ck[áéýaou]|[čďňřšťž]?n(?:[áéýaěiíou]|ého|ou)|[áí]k(?:[aeuyů]|em|ovi)?|ek(?:[aeu]|em|ovi)?|ič(?:e|ovi)?|[ktlrds]á)";
+    // pozn.: třídy sk/ck/n BEZ „o“ a „u“ — jinak braly země a města („Německo“,
+    // „Rakousku“, „Řecko“, „Brno“, „Lipno“) jako příjmení; příjmení na -sko/-cko/-no neexistují
+    const SUF="(?:ov(?:[áéýaěy]|ou|i)|sk(?:[áéýaě]|ou|ého|ému|ém)|ck(?:[áéýa]|ou)|[čďňřšťž]?n(?:[áéýaěií]|ého|ou)|[áí]k(?:[aeuyů]|em|ovi)?|ek(?:[aeu]|em|ovi)?|ič(?:e|ovi)?|[ktlrds]á)";
     const SUR_RE=new RegExp("(?:(\\p{Lu}[\\p{Ll}]+)\\s+)?(\\p{Lu}[\\p{Ll}]*"+SUF+")(?![\\p{Ll}])","gu");
     out=out.replace(SUR_RE,function(m,pre,word){const w=word.toLowerCase();return (NOTNAME.has(w)||CITIES.has(w))?m:assign(m,"OSOBA","osoba");});
   }

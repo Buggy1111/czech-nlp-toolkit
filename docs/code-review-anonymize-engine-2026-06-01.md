@@ -72,3 +72,4 @@ Architektonicky slušné jádro — priorita „specifické před obecným" v `S
 
 **Doporučené pořadí:** prioritně #1–8 (leaky), zbytek technický dluh.
 **Stav 1.6.2026:** opraveny leaky #5, #6 (IBAN), #7, #8. Zbytek ponechán k uvážení.
+**Stav 10.6.2026:** opraveny over-redakce **#1** (IČO mod-11 validátor), **#2** (PSČ: kontextová varianta vč. kompaktního tvaru + stopka na měny/jednotky), **#3** (telefon: +42x varianta s libovolným členěním + holá jen prefixy 2–7 se stopkou na částky), **#4** (SUF třídy sk/ck/n bez „o/u“ → země a města už nematchují; NOTNAME +60 adjektiv) a **#17** (NER náhrady s hranicemi `(?<!\p{L}\p{N})…(?!\p{L}\p{N})` — placeholdery i podřetězce slov chráněny). Testy: `tools/test-overredaction.cjs` — 39/39, + živý NER smoke 11/11 PII.
