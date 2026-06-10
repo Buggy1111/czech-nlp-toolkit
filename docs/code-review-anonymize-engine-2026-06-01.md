@@ -73,3 +73,16 @@ Architektonicky slušné jádro — priorita „specifické před obecným" v `S
 **Doporučené pořadí:** prioritně #1–8 (leaky), zbytek technický dluh.
 **Stav 1.6.2026:** opraveny leaky #5, #6 (IBAN), #7, #8. Zbytek ponechán k uvážení.
 **Stav 10.6.2026:** opraveny over-redakce **#1** (IČO mod-11 validátor), **#2** (PSČ: kontextová varianta vč. kompaktního tvaru + stopka na měny/jednotky), **#3** (telefon: +42x varianta s libovolným členěním + holá jen prefixy 2–7 se stopkou na částky), **#4** (SUF třídy sk/ck/n bez „o/u“ → země a města už nematchují; NOTNAME +60 adjektiv) a **#17** (NER náhrady s hranicemi `(?<!\p{L}\p{N})…(?!\p{L}\p{N})` — placeholdery i podřetězce slov chráněny). Testy: `tools/test-overredaction.cjs` — 39/39, + živý NER smoke 11/11 PII.
+
+**Stav 10.6.2026 (večer) — review UZAVŘEN, zbylé položky dořešeny:**
+- **#9** trailing grabber v pasu A ořezává zprava adjektiva/města (NOTNAME/CITIES); 2. slovo za jménem jen s příjmenní koncovkou (SUR_END). „Petr Veškeré Náležitosti“ → rediguje se jen jméno, „Barbora Vidová Hladká“ zůstává celá.
+- **#11** SPZ zúžena na reálný formát `\d[A-Za-z][A-Za-z0-9]\s?\d{4}` (+ tolerance malých písmen — dořešen i zbytek #6).
+- **#13+#14** nový sdílený `js/ner-common.js` (apiPost s 30s timeoutem/abortem + parseConll) — engine i toolkit.js bez duplicit, engine má nově timeout.
+- **#15** DATUM: + ISO `\d{4}-\d{2}-\d{2}` (validace roku/měsíce/dne) + dvouciferný rok `1.1.99` (validace dne/měsíce → verze „2.16.1“ propadnou).
+- **#16** MKN kontext rozšířen o onemocněn*/chorob*/posudk*.
+- **#18** vstup anonymizéru: `maxlength=20000` + pojistka v `run()` + jednotná konstanta `MAX_CHARS`; počítadlo ukazuje „X / 20 000 znaků“.
+- **#19** úklid: duplicitní „fulneku“ pryč, pasy C+D sloučeny do jednoho průchodu, `TYPE_LABELS` sjednoceny se `STRUCT.label`, magická čísla → konstanta.
+- **#20** jazykové kódy v překladové URL přes `encodeURIComponent`.
+- **#10, #12** vědomě přijato s komentářem v kódu (slovník měst bez kontextu nerozlišitelný od apelativ → NER mód; Base58Check = async SHA-256, FP ≠ leak). Dvě CNEC mapy (NER_LABEL vs nerCategory) = záměr, různé účely (zobrazení vs anonymizace).
+- **BONUS — 2 nové bugy nalezené při ověřování dema (byly živé na produkci):** (a) DOKID capture kradl číslici z placeholderu `SPZN1` → „SPZNDOKID1“; fix lookbehind `(?<![A-Z\d])` před číslicí. (b) kontextový vzor účtu byl case-sensitive („Účet“ s velkým Ú unikal) → `[Úú]č`. + demo příklady dostaly checksum-validní IČO (12345679, 87654326), aby validátor v demu vizuálně fungoval.
+- Testy rozšířeny na **62/62**; živý NER smoke 13 náhrad; browser smoke obou stránek (NER tab, překlad, konzole 0 chyb).

@@ -2,6 +2,7 @@
 /* anonymize-app.js — DOM vrstva stránky anonymizéru.
    Závisí na anonymize-engine.js (anonymize/fetchNER/…) a extract-text.js (extractText). */
 
+const MAX_CHARS=20000; // jednotný limit vstupu (textarea má i maxlength, soubor se ořeže)
 const input=document.getElementById("input"), output=document.getElementById("output");
 const tableEl=document.getElementById("table"), statsEl=document.getElementById("stats");
 const repcount=document.getElementById("repcount"), incount=document.getElementById("incount");
@@ -62,8 +63,8 @@ function render(anonymized,replacements){
 }
 
 const EXAMPLES={
-  "Právní spis":"Žalobce Jan Novák, nar. 15.3.1980, rodné číslo 800315/1234, bytem Sokolovská 12, Praha, podal dne 3.2.2026 ke Krajskému soudu návrh proti žalované Marii Svobodové (IČO 12345678, DIČ CZ12345678). Kontakt: jan.novak@email.cz, tel. 777 123 456. Spis sp. zn. 25 C 145/2026. Účet 1234567890/0800.",
-  "Faktura":"Odběratel: Petr Dvořák, Husova 5, Ostrava, PSČ 702 00. IČO 87654321, DIČ CZ87654321. Splatnost 30.4.2026. Platba na účet 19-2000145399/0800, IBAN CZ65 0800 0000 1920 0014 5399. Dotazy: petr.dvorak@firma.cz, 605 999 111 nebo https://faktury.firma.cz.",
+  "Právní spis":"Žalobce Jan Novák, nar. 15.3.1980, rodné číslo 800315/1234, bytem Sokolovská 12, Praha, podal dne 3.2.2026 ke Krajskému soudu návrh proti žalované Marii Svobodové (IČO 12345679, DIČ CZ12345679). Kontakt: jan.novak@email.cz, tel. 777 123 456. Spis sp. zn. 25 C 145/2026. Účet 1234567890/0800.",
+  "Faktura":"Odběratel: Petr Dvořák, Husova 5, Ostrava, PSČ 702 00. IČO 87654326, DIČ CZ87654326. Splatnost 30.4.2026. Platba na účet 19-2000145399/0800, IBAN CZ65 0800 0000 1920 0014 5399. Dotazy: petr.dvorak@firma.cz, 605 999 111 nebo https://faktury.firma.cz.",
   "E-mail":"Dobrý den, jmenuji se Eva Černá, bydlím v Brně. Moje číslo je 720 555 333 a email eva.cerna@seznam.cz. Narozena 22.11.1990, rodné číslo 905322/4567.",
   "Lékařská zpráva":"Pacientka Marie Nováková, nar. 14.6.1975, rodné číslo 755614/1234, bytem Tyršova 8, Olomouc, byla přijata 12.5.2026 na interní oddělení s diagnózou arteriální hypertenze. Ošetřující lékař MUDr. Petr Svoboda, kontakt petr.svoboda@nemocnice.cz, tel. 585 111 222. Doporučena kontrola za 14 dní."
 };
@@ -73,9 +74,10 @@ function currentMode(){const el=document.querySelector('input[name="mode"]:check
 // auto-grow: vstupní pole roste s obsahem (jako výstup), uživatel nemusí scrolovat
 function autoGrow(){input.style.overflowY="hidden";input.style.height="auto";input.style.height=Math.max(input.scrollHeight,300)+"px";}
 function run(){
+  if(input.value.length>MAX_CHARS) input.value=input.value.slice(0,MAX_CHARS); // pojistka k maxlength (review #18)
   const text=input.value;
   autoGrow();
-  incount.textContent=text.length+" znaků";
+  incount.textContent=text.length.toLocaleString("cs-CZ")+" / "+MAX_CHARS.toLocaleString("cs-CZ")+" znaků";
   if(currentMode()==="local"){
     nerinfo.textContent="";
     const r=anonymize(text); render(r.anonymized,r.replacements);
@@ -124,7 +126,7 @@ run();
     try{
       if(f.size>10*1024*1024) throw new Error("soubor je moc velký (max 10 MB)");
       const txt=await extractText(f);
-      input.value=txt.slice(0,20000); run();
+      input.value=txt.slice(0,MAX_CHARS); run();
       fst.style.color="var(--acc2)"; fst.textContent="✅ "+f.name+" ("+input.value.length+" znaků)";
     }catch(e){ fst.style.color="var(--err,#f87171)"; fst.textContent="⚠️ "+e.message; }
     fi.value="";

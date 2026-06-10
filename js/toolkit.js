@@ -1,7 +1,8 @@
 "use strict";
 /* toolkit.js — multi-nástrojový toolkit (NER, morfologie, korektor, překlad).
-   Vše volá ÚFAL LINDAT API přímo z prohlížeče. Závisí na extract-text.js (extractText). */
-const API="https://lindat.mff.cuni.cz/services";
+   Vše volá ÚFAL LINDAT API přímo z prohlížeče.
+   Závisí na extract-text.js (extractText) a ner-common.js (apiPost, parseConll, NER_API_BASE). */
+const API=NER_API_BASE;
 
 // napoj všechny upload inputy na cílový textarea
 function wireUploads(){
@@ -35,19 +36,7 @@ document.querySelectorAll(".tab:not(.dis)").forEach(t=>t.onclick=function(){
 });
 
 const MAX_CHARS=20000;
-async function post(url,params){
-  const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),30000); // ať se UI nezasekne
-  try{
-    const body=Object.entries(params).map(([k,v])=>k+"="+encodeURIComponent(v)).join("&");
-    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body,signal:ctrl.signal});
-    if(!r.ok) throw new Error("API "+r.status);
-    return r;
-  }catch(e){
-    if(e.name==="AbortError") throw new Error("vypršel časový limit (30 s)");
-    throw e;
-  }finally{ clearTimeout(timer); }
-}
+// POST helper (timeout/abort) je sdílený v ner-common.js (apiPost)
 // guard: prázdný / příliš dlouhý vstup (vyčistí i starý výstup)
 function guard(text,st,out){
   if(out)clr(out);
@@ -59,14 +48,10 @@ function guard(text,st,out){
 // ── NER (NameTag) ──
 const NER_LABEL={P:"osoba",pf:"křestní",ps:"příjmení",gu:"město",gs:"stát",gc:"region",
   "if":"firma",io:"instituce",ic:"značka",o:"objekt",t:"datum/čas",ty:"rok",td:"den",tm:"měsíc",at:"telefon",az:"PSČ",n:"číslo"};
-function parseConll(c){const ents=[];let cur=null;for(const raw of (c||"").split("\n")){const l=raw.replace(/\r$/,"");
-  if(!l.trim()){if(cur){ents.push(cur);cur=null;}continue;}const p=l.split("\t");if(p.length<2)continue;
-  const tok=p[0],f=p[1].split("|")[0];if(f==="O"){if(cur){ents.push(cur);cur=null;}continue;}
-  if(f.startsWith("B-")){if(cur)ents.push(cur);cur={type:f.slice(2),toks:[tok]};}
-  else if(f.startsWith("I-")){if(cur)cur.toks.push(tok);else cur={type:f.slice(2),toks:[tok]};}}
-  if(cur)ents.push(cur);for(const e of ents)e.text=e.toks.join(" ").replace(/\s+([.,;:!?)])/g,"$1");return ents;}
+// pozn. (review #19): NER_LABEL = jemné CNEC podtypy pro ZOBRAZENÍ; nerCategory()
+// v anonymize-engine.js = hrubé anonymizační kategorie. Záměrně dvě různé mapy.
 $("ner-go").onclick=async function(){const b=this,st=$("ner-st"),out=$("ner-out");if(!guard($("ner-in").value,st,out))return;b.disabled=true;setStatus(st,"⏳ NameTag…");
-  try{const r=await post(API+"/nametag/api/recognize",{data:$("ner-in").value,output:"conll"});
+  try{const r=await apiPost(API+"/nametag/api/recognize",{data:$("ner-in").value,output:"conll"});
     const ents=parseConll((await r.json()).result);clr(out);
     if(!ents.length){out.appendChild(document.createTextNode("Žádné entity."));}
     else ents.forEach(e=>{const s=document.createElement("span");s.className="ent ent-"+e.type;
@@ -79,7 +64,7 @@ const UPOS={NOUN:"podst. jméno",PROPN:"vlastní jméno",VERB:"sloveso",AUX:"pom
   ADV:"příslovce",PRON:"zájmeno",DET:"determinant",NUM:"číslovka",ADP:"předložka",CCONJ:"spojka",SCONJ:"spojka",
   PART:"částice",INTJ:"citoslovce",PUNCT:"interpunkce",SYM:"symbol",X:"jiné"};
 $("morf-go").onclick=async function(){const b=this,st=$("morf-st"),out=$("morf-out");if(!guard($("morf-in").value,st,out))return;b.disabled=true;setStatus(st,"⏳ UDPipe…");
-  try{const r=await post(API+"/udpipe/api/process",{data:$("morf-in").value,tokenizer:"",tagger:"",model:"czech",output:"conllu"});
+  try{const r=await apiPost(API+"/udpipe/api/process",{data:$("morf-in").value,tokenizer:"",tagger:"",model:"czech",output:"conllu"});
     const lines=(await r.json()).result.split("\n").filter(l=>l&&!l.startsWith("#"));
     clr(out);const tbl=document.createElement("table");
     const thead=document.createElement("thead"),htr=document.createElement("tr");
@@ -95,7 +80,7 @@ $("morf-go").onclick=async function(){const b=this,st=$("morf-st"),out=$("morf-o
 
 // ── Korektor ──
 $("korek-go").onclick=async function(){const b=this,st=$("korek-st"),out=$("korek-out");if(!guard($("korek-in").value,st,out))return;b.disabled=true;setStatus(st,"⏳ Korektor…");
-  try{const r=await post(API+"/korektor/api/correct",{data:$("korek-in").value,model:"czech-spellchecker-130202"});
+  try{const r=await apiPost(API+"/korektor/api/correct",{data:$("korek-in").value,model:"czech-spellchecker-130202"});
     const corrected=(await r.json()).result;clr(out);
     const oa=$("korek-in").value.split(/(\s+)/),ca=corrected.split(/(\s+)/);
     if(oa.length===ca.length){
@@ -116,7 +101,7 @@ $("prek-go").onclick=async function(){const b=this,st=$("prek-st"),out=$("prek-o
   if(!guard($("prek-in").value,st,out))return;
   if(src===tgt){setStatus(st,"vyber různé jazyky","err");return;}
   b.disabled=true;setStatus(st,"⏳ překládám…");
-  try{const r=await post(API+"/translation/api/v2/languages?src="+src+"&tgt="+tgt,{input_text:$("prek-in").value});
+  try{const r=await apiPost(API+"/translation/api/v2/languages?src="+encodeURIComponent(src)+"&tgt="+encodeURIComponent(tgt),{input_text:$("prek-in").value});
     const txt=await r.text();clr(out);out.appendChild(document.createTextNode(txt.trim()));
     setStatus(st,LANGS[src]+" → "+LANGS[tgt]+" ✓","ok");
   }catch(e){setStatus(st,"⚠️ "+e.message,"err");}finally{b.disabled=false;}};
