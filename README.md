@@ -2,7 +2,7 @@
 
 České NLP nástroje online, zdarma a přímo v prohlížeči. Postaveno na akademických nástrojích [ÚFAL MFF UK](https://ufal.mff.cuni.cz/).
 
-**Web:** https://buggy1111.github.io/czech-nlp-toolkit/
+**Web:** https://anonymizace.js.org/
 
 Doprovodný web k MCP serveru [anonymize-mcp](https://github.com/Buggy1111/anonymize-mcp) — pro lidi, kteří nechtějí řešit instalaci ani MCP.
 
@@ -56,7 +56,12 @@ Konvence: ≤ 400 řádků na soubor, čistá separace logiky a DOM, žádný `i
 
 ## Licence
 
-Nekomerční použití. Engine © ÚFAL MFF UK
+Kód: [PolyForm Noncommercial 1.0.0](LICENSE.md) — volné použití, úpravy i šíření
+pro nekomerční účely.
+
+> Required Notice: Copyright Michal Bürgermeister (https://anonymizace.js.org)
+
+NLP engine © ÚFAL MFF UK
 ([NameTag](https://ufal.mff.cuni.cz/nametag/3) ·
 [UDPipe](https://ufal.mff.cuni.cz/udpipe/2) ·
 [Korektor](https://ufal.mff.cuni.cz/korektor) ·
